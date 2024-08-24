@@ -22,6 +22,8 @@
 #include <unistd.h>
 #include "common.h"
 
+#include "lvgl-gui/gui.h"
+
 #define PROXPROMPT_MAX_SIZE 255
 
 #define PROXPROMPT_COMPOSE "[" "%s%s%s" "] pm3 --> "

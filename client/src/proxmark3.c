@@ -1003,6 +1003,7 @@ void pm3_init(void) {
 #ifndef LIBPM3
 int main(int argc, char *argv[]) {
     pm3_init();
+    gui_init();
     bool waitCOMPort = false;
     bool addScriptExec = false;
     bool stayInCommandLoop = false;
@@ -1449,7 +1450,8 @@ int main(int argc, char *argv[]) {
 #  endif
 
 #else
-    main_loop(script_cmds_file, script_cmd, stayInCommandLoop);
+    // main_loop(script_cmds_file, script_cmd, stayInCommandLoop);
+    gui_loop();
 #endif
 
     // Clean up the port

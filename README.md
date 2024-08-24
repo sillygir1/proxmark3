@@ -1,3 +1,21 @@
+# Proxmark3 client with LVGL gui
+
+## Requirements
+
+- [milkv-duo/duo-sdk](https://github.com/milkv-duo/duo-sdk.git)
+
+- [sillygir1/pilk-v-software](https://github.com/sillygir1/pilk-v-software.git)
+
+- LZ4 and BZIP2 compiled for RISC-V (you can build them with buildroot image)
+
+## Building client
+
+1. Change paths to repositories, lz4 and bzip2 in `make.sh`
+
+2. run `make.sh`
+
+Original readme is preserved below
+
 # Iceman Fork - Proxmark3
 
 The Proxmark3 is the swiss-army tool of RFID, allowing for interactions with the vast majority of RFID tags on a global scale. Originally built by Jonathan Westhues, the device is now the goto tool for RFID Analysis for the enthusiast. Iceman repository is considered to be the pinnacle of features and functionality, enabling a huge range of extremely useful and convenient commands and LUA scripts to automate chip identification, penetration testing, and programming
