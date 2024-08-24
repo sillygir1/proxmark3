@@ -783,8 +783,8 @@ SRCS += bucketsort.c \
 
 # LVGL and pilk stuff
 SRCS += lvgl-gui/gui.c \
-		/home/sillygir1/coding/pilk-v-software/duo-encoder-kb/encoder.c \
-		/home/sillygir1/coding/pilk-v-software/duo-battery/battery.c \
+		$(PILK_SOFTWARE)/duo-encoder-kb/encoder.c \
+		$(PILK_SOFTWARE)/duo-battery/battery.c \
 		$(LVGL_DIR)/../lv_drivers/display/fbdev.c \
 		$(LVGL_DIR)/../lv_drivers/indev/evdev.c \
 		$(LVGL_DIR)/src/core/lv_disp.c \
