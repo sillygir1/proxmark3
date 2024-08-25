@@ -12,6 +12,7 @@
 
 #include "battery.h"
 #include "encoder.h"
+#include "view_manager.h"
 
 #define DISP_BUF_SIZE (128 * 1024)
 
@@ -22,6 +23,7 @@ typedef struct {
   lv_obj_t *battery_icon;
   lv_obj_t *mode_label;
   int adc_fd;
+  ViewManager *view_manager;
 } ProxmarkData;
 
 void gui_init();

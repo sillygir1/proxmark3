@@ -781,9 +781,8 @@ SRCS += bucketsort.c \
 		lfdemod.c \
 		util_posix.c
 
-# LVGL and pilk stuff
-SRCS += lvgl-gui/gui.c \
-		$(PILK_SOFTWARE)/duo-encoder-kb/encoder.c \
+# LVGL stuff
+SRCS += $(PILK_SOFTWARE)/duo-encoder-kb/encoder.c \
 		$(PILK_SOFTWARE)/duo-battery/battery.c \
 		$(LVGL_DIR)/../lv_drivers/display/fbdev.c \
 		$(LVGL_DIR)/../lv_drivers/indev/evdev.c \
@@ -946,6 +945,12 @@ SRCS += lvgl-gui/gui.c \
 		$(LVGL_DIR)/src/widgets/lv_switch.c \
 		$(LVGL_DIR)/src/widgets/lv_table.c \
 		$(LVGL_DIR)/src/widgets/lv_textarea.c
+
+# LVGL gui files
+SRCS += lvgl-gui/gui.c \
+		lvgl-gui/view_manager.c \
+		lvgl-gui/views/view_list.c \
+		lvgl-gui/views/main_menu_view.c
 
 ifeq ($(GD_FOUND),1)
     # electronic shelf labels

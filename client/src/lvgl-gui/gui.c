@@ -1,7 +1,8 @@
 #include "gui.h"
+#include "views/view_list.h"
 
 static bool running;
-
+lv_timer_t *battery_timer;
 ProxmarkData *proxmark_data;
 
 static void encoder_cb(lv_indev_drv_t *drv, lv_indev_data_t *data) {
@@ -104,6 +105,11 @@ static void event_handler(lv_event_t *e) {
   }
 }
 
+void battery_timer_cb(lv_timer_t *timer) {
+  if (proxmark_data->adc_fd && proxmark_data->battery_icon)
+    update_charge();
+}
+
 static void sig_handler(int _) { running = false; }
 
 void gui_init() {
@@ -163,7 +169,16 @@ void gui_init() {
   if (proxmark_data->adc_fd < 0)
     printf("Adc init issue");
 
-  lv_obj_add_event_cb(lv_scr_act(), event_handler, LV_EVENT_ALL, NULL);
+  battery_timer = lv_timer_create(battery_timer_cb, 2000, NULL);
+
+  draw_status_bar();
+  update_charge();
+
+  lv_obj_set_scrollbar_mode(lv_scr_act(), LV_SCROLLBAR_MODE_OFF);
+
+  proxmark_data->view_manager = view_manager_init();
+  views_init(proxmark_data->view_manager);
+  view_manager_switch_view(proxmark_data->view_manager, VIEW_MAIN_MENU);
 }
 
 void gui_loop() {
@@ -175,6 +190,8 @@ void gui_loop() {
   }
   printf("Exiting...\n");
   encoder_release(proxmark_data->enc_data);
+  lv_timer_del(battery_timer);
+  view_manager_free(proxmark_data->view_manager);
   close(proxmark_data->adc_fd);
   free(proxmark_data->enc_data);
   free(proxmark_data);
