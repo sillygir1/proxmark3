@@ -3,6 +3,13 @@
 
 static lv_obj_t *list;
 
+#define ITEMS_NUM 5
+static const char *menu_items[ITEMS_NUM] = {"Read tag", "Sniff", "Dummy 1",
+                                            "Dummy 2", "Dummy 3"};
+static const char *menu_icons[ITEMS_NUM] = {LV_SYMBOL_LIST, LV_SYMBOL_LIST,
+                                            LV_SYMBOL_LIST, LV_SYMBOL_LIST,
+                                            LV_SYMBOL_LIST};
+
 static void event_handler(lv_event_t *e) {
   lv_event_code_t code = lv_event_get_code(e);
   lv_obj_t *obj = lv_event_get_target(e);
@@ -27,16 +34,10 @@ void hf14a_init(void *_view_manager, lv_obj_t *obj_parent) {
   lv_obj_set_height(list, 295);
   set_mode_text("HF 14a");
   lv_obj_t *btn;
-  btn = lv_list_add_btn(list, LV_SYMBOL_LIST, "Read tag");
-  lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
-  btn = lv_list_add_btn(list, LV_SYMBOL_LIST, "Sniff");
-  lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
-  btn = lv_list_add_btn(list, LV_SYMBOL_LIST, "Idk");
-  lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
-  btn = lv_list_add_btn(list, LV_SYMBOL_LIST, "Idk 2");
-  lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
-  btn = lv_list_add_btn(list, LV_SYMBOL_LIST, "Idk 3");
-  lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
+  for (uint8_t i = 0; i < ITEMS_NUM; i++) {
+    btn = lv_list_add_btn(list, menu_icons[i], menu_items[i]);
+    lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
+  }
 }
 
 void hf14a_exit() { lv_obj_del(list); }
