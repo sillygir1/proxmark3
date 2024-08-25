@@ -28,6 +28,8 @@ typedef struct {
 
 void gui_init();
 
+void set_mode_text(char *text);
+
 void gui_loop();
 
 // From <time.h>
