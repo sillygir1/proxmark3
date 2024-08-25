@@ -23,6 +23,7 @@ void main_menu_init(lv_obj_t *obj_parent) {
   lv_obj_set_style_radius(list, 0, LV_PART_MAIN);
   lv_obj_set_width(list, 240);
   lv_obj_set_height(list, 295);
+  set_mode_text("Main menu");
   lv_obj_t *btn;
   btn = lv_list_add_btn(list, LV_SYMBOL_LIST, "HF 14a");
   lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, NULL);

@@ -90,6 +90,10 @@ void update_charge() {
     lv_label_set_text(proxmark_data->battery_icon, text);
 }
 
+void set_mode_text(char *text) {
+  lv_label_set_text(proxmark_data->mode_label, text);
+}
+
 static void event_handler(lv_event_t *e) {
   lv_event_code_t code = lv_event_get_code(e);
   lv_obj_t *obj = lv_event_get_target(e);
@@ -174,9 +178,9 @@ void gui_init() {
   draw_status_bar();
   update_charge();
 
-  lv_obj_set_scrollbar_mode(lv_scr_act(), LV_SCROLLBAR_MODE_OFF);
-
   proxmark_data->view_manager = view_manager_init();
+  lv_obj_set_scrollbar_mode(proxmark_data->view_manager->obj_parent,
+                            LV_SCROLLBAR_MODE_OFF);
   views_init(proxmark_data->view_manager);
   view_manager_switch_view(proxmark_data->view_manager, VIEW_MAIN_MENU);
 }
