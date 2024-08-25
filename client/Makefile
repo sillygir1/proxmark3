@@ -950,7 +950,8 @@ SRCS += $(PILK_SOFTWARE)/duo-encoder-kb/encoder.c \
 SRCS += lvgl-gui/gui.c \
 		lvgl-gui/view_manager.c \
 		lvgl-gui/views/view_list.c \
-		lvgl-gui/views/main_menu_view.c
+		lvgl-gui/views/main_menu_view.c \
+		lvgl-gui/views/hf14a_view.c
 
 ifeq ($(GD_FOUND),1)
     # electronic shelf labels
