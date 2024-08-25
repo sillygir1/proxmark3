@@ -37,7 +37,7 @@ int view_manager_switch_view(ViewManager *view_manager, ViewList number) {
     view_manager->view[view_manager->current_view]->exit();
   view_manager->current_view = number;
   view_manager->view[view_manager->current_view]->init(
-      view_manager->obj_parent);
+      view_manager, view_manager->obj_parent);
   return 0;
 }
 

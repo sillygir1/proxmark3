@@ -7,7 +7,7 @@
 #include "views/view_list.h"
 
 typedef struct {
-  void (*init)(lv_obj_t *);
+  void (*init)(void *, lv_obj_t *);
   void (*exit)();
 } View;
 
