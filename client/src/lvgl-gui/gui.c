@@ -144,6 +144,12 @@ void gui_init() {
   disp_drv.ver_res = 320;
   lv_disp_drv_register(&disp_drv);
 
+  lv_obj_t *label = lv_label_create(lv_scr_act());
+  lv_label_set_text(label, "Loading");
+  lv_obj_center(label);
+  lv_timer_handler();
+  lv_obj_del(label);
+
   /*Initialize and register an input drivers*/
   static lv_indev_drv_t encoder_drv;
   lv_indev_drv_init(&encoder_drv);
