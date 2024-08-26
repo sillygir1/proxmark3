@@ -1,5 +1,6 @@
 #include "main_menu_view.h"
-#include "../view_manager.h"
+#include "view_list.h"
+#include "view_manager.h"
 
 static lv_obj_t *list;
 

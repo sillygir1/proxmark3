@@ -184,7 +184,7 @@ void gui_init() {
   draw_status_bar();
   update_charge();
 
-  proxmark_data->view_manager = view_manager_init();
+  proxmark_data->view_manager = view_manager_init(VIEW_COUNT);
   lv_obj_set_scrollbar_mode(proxmark_data->view_manager->obj_parent,
                             LV_SCROLLBAR_MODE_OFF);
   views_init(proxmark_data->view_manager);

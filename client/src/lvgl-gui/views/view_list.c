@@ -1,8 +1,8 @@
 #include "view_list.h"
-#include "../view_manager.h"
 #include "hf14a_read_view.h"
 #include "hf14a_view.h"
 #include "main_menu_view.h"
+#include "view_manager.h"
 
 void views_init(void *_view_manager) {
   ViewManager *view_manager = _view_manager;

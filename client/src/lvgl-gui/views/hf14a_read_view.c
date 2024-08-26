@@ -1,20 +1,47 @@
 #include "hf14a_read_view.h"
-#include "../view_manager.h"
+#include "../../cmdhf14a.h"
+#include "../../comms.h"
+#include "view_list.h"
+#include "view_manager.h"
+#include <mifare.h>
 
 static lv_obj_t *list;
-
-bool field_on;
-bool continuous;
+bool keep_field;
 bool ecp;
 bool magsafe;
 bool skip_RATS;
 
-#define OPTIONS_NUM 6
-static const char *options[OPTIONS_NUM] = {
-    "Read", "Leave field ON", "Continuous", "Use ECP", "Magsafe", "Skip RATS"};
+#define OPTIONS_NUM 5
+static const char *options[OPTIONS_NUM] = {"Read", "Leave field ON", "Use ECP",
+                                           "Magsafe", "Skip RATS"};
 
 static void hf14a_read() {
-  // UID reading function
+  uint32_t cm = ISO14A_CONNECT;
+  if (keep_field)
+    cm |= ISO14A_NO_DISCONNECT;
+  if (skip_RATS)
+    cm |= ISO14A_NO_RATS;
+  if (ecp || magsafe) {
+    iso14a_polling_parameters_t *polling_parameters = NULL;
+    iso14a_polling_parameters_t parameters =
+        iso14a_get_polling_parameters(ecp, magsafe);
+    cm |= ISO14A_USE_CUSTOM_POLLING;
+    polling_parameters = &parameters;
+    SendCommandMIX(CMD_HF_ISO14443A_READER, cm, 0, 0,
+                   (uint8_t *)polling_parameters,
+                   sizeof(iso14a_polling_parameters_t));
+  } else {
+    SendCommandMIX(CMD_HF_ISO14443A_READER, cm, 0, 0, NULL, 0);
+  }
+
+  PacketResponseNG resp;
+  WaitForResponseTimeout(CMD_ACK, &resp, 2500);
+  DropField();
+  static iso14a_card_select_t card;
+  memcpy(&card, (iso14a_card_select_t *)resp.data.asBytes,
+         sizeof(iso14a_card_select_t));
+
+  // display_tag(&card);
 }
 
 static void event_handler(lv_event_t *e) {
@@ -35,17 +62,14 @@ static void event_handler(lv_event_t *e) {
         lv_obj_add_state(chb, LV_STATE_CHECKED);
       }
       if (strcmp(button_text, options[1]) == 0)
-        field_on = lv_obj_has_state(chb, LV_STATE_CHECKED);
+        keep_field = lv_obj_has_state(chb, LV_STATE_CHECKED);
       else if (strcmp(button_text, options[2]) == 0)
-        continuous = lv_obj_has_state(chb, LV_STATE_CHECKED);
-      else if (strcmp(button_text, options[3]) == 0)
         ecp = lv_obj_has_state(chb, LV_STATE_CHECKED);
-      else if (strcmp(button_text, options[4]) == 0)
+      else if (strcmp(button_text, options[3]) == 0)
         magsafe = lv_obj_has_state(chb, LV_STATE_CHECKED);
-      else if (strcmp(button_text, options[5]) == 0)
+      else if (strcmp(button_text, options[4]) == 0)
         skip_RATS = lv_obj_has_state(chb, LV_STATE_CHECKED);
     }
-
   } else if (code == LV_EVENT_KEY) {
     if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
       view_manager_switch_view(view_manager, VIEW_HF14A);

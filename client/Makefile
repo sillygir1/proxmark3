@@ -783,6 +783,7 @@ SRCS += bucketsort.c \
 
 # LVGL stuff
 SRCS += $(PILK_SOFTWARE)/duo-encoder-kb/encoder.c \
+		$(PILK_SOFTWARE)/view-manager/view_manager.c \
 		$(PILK_SOFTWARE)/duo-battery/battery.c \
 		$(LVGL_DIR)/../lv_drivers/display/fbdev.c \
 		$(LVGL_DIR)/../lv_drivers/indev/evdev.c \
@@ -948,7 +949,6 @@ SRCS += $(PILK_SOFTWARE)/duo-encoder-kb/encoder.c \
 
 # LVGL gui files
 SRCS += lvgl-gui/gui.c \
-		lvgl-gui/view_manager.c \
 		lvgl-gui/views/view_list.c \
 		lvgl-gui/views/main_menu_view.c \
 		lvgl-gui/views/hf14a_view.c \
