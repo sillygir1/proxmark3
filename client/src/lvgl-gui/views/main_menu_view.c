@@ -28,9 +28,9 @@ static void event_handler(lv_event_t *e) {
   }
 }
 
-void main_menu_init(void *_view_manager, lv_obj_t *obj_parent) {
+void main_menu_init(void *_view_manager) {
   ViewManager *view_manager = _view_manager;
-  list = lv_list_create(obj_parent);
+  list = lv_list_create(view_manager->obj_parent);
   lv_obj_set_style_radius(list, 0, LV_PART_MAIN);
   lv_obj_set_width(list, 240);
   lv_obj_set_height(list, 295);

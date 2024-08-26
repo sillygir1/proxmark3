@@ -18,7 +18,7 @@ ViewManager *view_manager_init() {
   return view_manager;
 }
 
-void view_manager_add_view(ViewManager *view_manager, int (*init)(),
+void view_manager_add_view(ViewManager *view_manager, void (*init)(void *),
                            void (*exit)(), ViewList number) {
   printf("Adding view\n");
   view_manager->view[number] = malloc(sizeof(*view_manager->view[number]));
@@ -36,8 +36,7 @@ int view_manager_switch_view(ViewManager *view_manager, ViewList number) {
   if (view_manager->current_view != VIEW_NONE)
     view_manager->view[view_manager->current_view]->exit();
   view_manager->current_view = number;
-  view_manager->view[view_manager->current_view]->init(
-      view_manager, view_manager->obj_parent);
+  view_manager->view[view_manager->current_view]->init(view_manager);
   return 0;
 }
 

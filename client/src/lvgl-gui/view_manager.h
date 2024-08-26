@@ -7,7 +7,7 @@
 #include "views/view_list.h"
 
 typedef struct {
-  void (*init)(void *, lv_obj_t *);
+  void (*init)(void *);
   void (*exit)();
 } View;
 
@@ -27,7 +27,7 @@ ViewManager *view_manager_init();
 /// @param input input function of the view
 /// @param exit exit function of the view
 /// @param number view's unique number
-void view_manager_add_view(ViewManager *view_manager, int (*init)(),
+void view_manager_add_view(ViewManager *view_manager, void (*init)(void *),
                            void (*exit)(), ViewList number);
 
 /// @brief Switch to view
