@@ -19,7 +19,7 @@ static void event_handler(lv_event_t *e) {
     const char *button_text = lv_list_get_btn_text(list, obj);
     // printf("%s\n", button_text);
     if (strcmp(button_text, menu_items[0]) == 0) {
-      // view_manager_switch_view(view_manager, VIEW_HF14AREAD);
+      view_manager_switch_view(view_manager, VIEW_HF14AREAD);
     } else if (strcmp(button_text, menu_items[1]) == 0) {
       // view_manager_switch_view(view_manager, VIEW_HF14AINFO);
     } else if (strcmp(button_text, menu_items[2]) == 0) {
