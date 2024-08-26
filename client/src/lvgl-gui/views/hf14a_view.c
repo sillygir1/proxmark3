@@ -20,7 +20,7 @@ static void event_handler(lv_event_t *e) {
     const char *button_text = lv_list_get_btn_text(list, obj);
     // printf("%s\n", button_text);
     if (strcmp(button_text, menu_items[0]) == 0) {
-      view_manager_switch_view(view_manager, VIEW_HF14AREAD);
+      view_manager_switch_view(view_manager, VIEW_HF14AREAD, NULL);
     } else if (strcmp(button_text, menu_items[1]) == 0) {
       // view_manager_switch_view(view_manager, VIEW_HF14AINFO);
     } else if (strcmp(button_text, menu_items[2]) == 0) {
@@ -30,12 +30,12 @@ static void event_handler(lv_event_t *e) {
     }
   } else if (code == LV_EVENT_KEY) {
     if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
-      view_manager_switch_view(view_manager, VIEW_MAIN_MENU);
+      view_manager_switch_view(view_manager, VIEW_MAIN_MENU, NULL);
     }
   }
 }
 
-void hf14a_init(void *_view_manager) {
+void hf14a_init(void *_view_manager, void *ctx) {
   ViewManager *view_manager = _view_manager;
   list = lv_list_create(view_manager->obj_parent);
   lv_obj_set_style_radius(list, 0, LV_PART_MAIN);

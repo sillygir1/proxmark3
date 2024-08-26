@@ -72,12 +72,12 @@ static void event_handler(lv_event_t *e) {
     }
   } else if (code == LV_EVENT_KEY) {
     if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
-      view_manager_switch_view(view_manager, VIEW_HF14A);
+      view_manager_switch_view(view_manager, VIEW_HF14A, NULL);
     }
   }
 }
 
-void hf14a_read_init(void *_view_manager) {
+void hf14a_read_init(void *_view_manager, void *ctx) {
   set_mode_text("HF 14a read");
   ViewManager *view_manager = _view_manager;
   list = lv_list_create(view_manager->obj_parent);

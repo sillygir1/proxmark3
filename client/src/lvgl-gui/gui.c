@@ -188,7 +188,7 @@ void gui_init() {
   lv_obj_set_scrollbar_mode(proxmark_data->view_manager->obj_parent,
                             LV_SCROLLBAR_MODE_OFF);
   views_init(proxmark_data->view_manager);
-  view_manager_switch_view(proxmark_data->view_manager, VIEW_MAIN_MENU);
+  view_manager_switch_view(proxmark_data->view_manager, VIEW_MAIN_MENU, NULL);
 }
 
 void gui_loop() {

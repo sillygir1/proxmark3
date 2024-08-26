@@ -19,7 +19,7 @@ static void event_handler(lv_event_t *e) {
     const char *button_text = lv_list_get_btn_text(list, obj);
     // Switch view
     if (strcmp(button_text, menu_items[0]) == 0) {
-      view_manager_switch_view(view_manager, VIEW_HF14A);
+      view_manager_switch_view(view_manager, VIEW_HF14A, NULL);
     }
   } else if (code == LV_EVENT_KEY) {
     if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
@@ -29,7 +29,7 @@ static void event_handler(lv_event_t *e) {
   }
 }
 
-void main_menu_init(void *_view_manager) {
+void main_menu_init(void *_view_manager, void *ctx) {
   ViewManager *view_manager = _view_manager;
   list = lv_list_create(view_manager->obj_parent);
   lv_obj_set_style_radius(list, 0, LV_PART_MAIN);
