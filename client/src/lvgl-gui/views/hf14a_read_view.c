@@ -15,7 +15,7 @@ bool skip_RATS;
 static const char *options[OPTIONS_NUM] = {"Read", "Leave field ON", "Use ECP",
                                            "Magsafe", "Skip RATS"};
 
-static void hf14a_read() {
+static void hf14a_read(ViewManager *view_manager) {
   uint32_t cm = ISO14A_CONNECT;
   if (keep_field)
     cm |= ISO14A_NO_DISCONNECT;
@@ -37,11 +37,12 @@ static void hf14a_read() {
   PacketResponseNG resp;
   WaitForResponseTimeout(CMD_ACK, &resp, 2500);
   DropField();
-  static iso14a_card_select_t card;
+  iso14a_card_select_t card;
   memcpy(&card, (iso14a_card_select_t *)resp.data.asBytes,
          sizeof(iso14a_card_select_t));
 
-  // display_tag(&card);
+  if (card.uidlen > 0)
+    view_manager_switch_view(view_manager, VIEW_HF14ACARD, &card);
 }
 
 static void event_handler(lv_event_t *e) {
@@ -53,7 +54,7 @@ static void event_handler(lv_event_t *e) {
     const char *button_text = lv_list_get_btn_text(list, obj);
     lv_obj_t *chb;
     if (strcmp(button_text, options[0]) == 0) {
-      hf14a_read();
+      hf14a_read(view_manager);
     } else {
       chb = lv_obj_get_child(obj, -1);
       if (lv_obj_has_state(chb, LV_STATE_CHECKED)) {
@@ -78,7 +79,7 @@ static void event_handler(lv_event_t *e) {
 }
 
 void hf14a_read_init(void *_view_manager, void *ctx) {
-  set_mode_text("HF 14a read");
+  set_mode_text("ISO 14443-A read");
   ViewManager *view_manager = _view_manager;
   list = lv_list_create(view_manager->obj_parent);
   lv_obj_set_style_radius(list, 0, LV_PART_MAIN);

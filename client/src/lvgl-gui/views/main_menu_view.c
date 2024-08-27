@@ -5,7 +5,7 @@
 static lv_obj_t *list;
 
 #define ITEMS_NUM 4
-static const char *menu_items[ITEMS_NUM] = {"HF 14a", "Mifare Classic",
+static const char *menu_items[ITEMS_NUM] = {"ISO 14443-A", "Mifare Classic",
                                             "Copy UID", "Saved dumps"};
 static const char *menu_icons[ITEMS_NUM] = {
     LV_SYMBOL_LIST, LV_SYMBOL_LIST, LV_SYMBOL_COPY, LV_SYMBOL_DIRECTORY};

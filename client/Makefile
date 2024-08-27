@@ -952,7 +952,8 @@ SRCS += lvgl-gui/gui.c \
 		lvgl-gui/views/view_list.c \
 		lvgl-gui/views/main_menu_view.c \
 		lvgl-gui/views/hf14a_view.c \
-		lvgl-gui/views/hf14a_read_view.c
+		lvgl-gui/views/hf14a_read_view.c \
+		lvgl-gui/views/hf14a_card_view.c
 
 ifeq ($(GD_FOUND),1)
     # electronic shelf labels

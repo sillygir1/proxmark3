@@ -41,7 +41,7 @@ void hf14a_init(void *_view_manager, void *ctx) {
   lv_obj_set_style_radius(list, 0, LV_PART_MAIN);
   lv_obj_set_width(list, 240);
   lv_obj_set_height(list, 295);
-  set_mode_text("HF 14a");
+  set_mode_text("ISO 14443-A");
   lv_obj_t *btn;
   for (uint8_t i = 0; i < ITEMS_NUM; i++) {
     btn = lv_list_add_btn(list, menu_icons[i], menu_items[i]);
