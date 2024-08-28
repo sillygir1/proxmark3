@@ -1,7 +1,7 @@
 #include "gui_common.h"
 
-iso14a_card_select_t hf14a_read(bool keep_field, bool skip_RATS,
-                                       bool ecp, bool magsafe) {
+iso14a_card_select_t *hf14a_read(bool keep_field, bool skip_RATS, bool ecp,
+                                 bool magsafe) {
   uint32_t cm = ISO14A_CONNECT;
   if (keep_field)
     cm |= ISO14A_NO_DISCONNECT;
@@ -23,8 +23,8 @@ iso14a_card_select_t hf14a_read(bool keep_field, bool skip_RATS,
   PacketResponseNG resp;
   WaitForResponseTimeout(CMD_ACK, &resp, 2500);
   DropField();
-  iso14a_card_select_t card;
-  memcpy(&card, (iso14a_card_select_t *)resp.data.asBytes,
+  iso14a_card_select_t *card = malloc(sizeof(*card));
+  memcpy(card, (iso14a_card_select_t *)resp.data.asBytes,
          sizeof(iso14a_card_select_t));
   return card;
 }

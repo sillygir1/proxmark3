@@ -1,5 +1,6 @@
 #include "../../cmdhf14a.h"
 #include "../../comms.h"
+#include "../gui_common.h"
 #include "hf14a_read_view.h"
 #include "view_list.h"
 #include "view_manager.h"
@@ -7,9 +8,34 @@
 
 static lv_obj_t *label;
 static lv_obj_t *list;
+CardData *card_data;
 
 #define OPTIONS_NUM 2
 static const char *options[OPTIONS_NUM] = {"Save", "Simulate"};
+
+static int save_card() {
+  iso14a_card_select_t *card = card_data->card;
+  char *filename = malloc(sizeof(char) * 64);
+  memset(filename, 0, 64);
+  char *path = "/root/pilk/uid/";
+  system("mkdir -p /root/pilk/uid/");
+  strncpy(filename, path, 32);
+  char buff[3];
+  for (uint8_t i = 0; i < card->uidlen; i++) {
+    snprintf(buff, 3, "%02X", card->uid[i]);
+    strcat(filename, buff);
+  }
+  char uid[15];
+  memset(uid, 0, 15);
+  strncpy(uid, filename, 2 * card->uidlen);
+  strcat(filename, ".uid");
+  FILE *file = fopen(filename, "w+");
+  printf("Saving to %s\n", filename);
+  fprintf(file, "%s\n%02X%02X\n%02X\n", uid, card->atqa[1], card->atqa[0],
+          card->sak);
+  fclose(file);
+  free(filename);
+}
 
 static void event_handler(lv_event_t *e) {
   lv_event_code_t code = lv_event_get_code(e);
@@ -21,6 +47,7 @@ static void event_handler(lv_event_t *e) {
     lv_obj_t *chb;
     if (strcmp(button_text, options[0]) == 0) {
       // Save
+      save_card();
     } else if (strcmp(button_text, options[1]) == 0) {
       // Simulate
     }
@@ -34,10 +61,25 @@ static void event_handler(lv_event_t *e) {
 void hf14a_card_init(void *_view_manager, void *ctx) {
   set_mode_text("ISO 14443-A card");
   ViewManager *view_manager = _view_manager;
-  iso14a_card_select_t *card = ctx;
+  if (!card_data)
+    card_data = ctx;
+  uint8_t list_height = 80;
+  switch (card_data->prev_view) {
+  case VIEW_HF14AREAD:
+    list_height = 80;
+    break;
+  // case VIEW_FILE_MANAGER:
+  //   // Do no show "save" button
+  //   break;
+  default:
+    printf("Something's wrong, exiting...");
+    raise(SIGINT);
+    break;
+  }
+  iso14a_card_select_t *card = card_data->card;
   list = lv_list_create(view_manager->obj_parent);
   lv_obj_set_style_radius(list, 0, LV_PART_MAIN);
-  lv_obj_set_size(list, 240, 80);
+  lv_obj_set_size(list, 240, list_height);
   lv_obj_align(list, LV_ALIGN_BOTTOM_LEFT, 0, 0);
 
   lv_obj_t *btn;
@@ -77,6 +119,10 @@ void hf14a_card_init(void *_view_manager, void *ctx) {
 }
 
 void hf14a_card_exit() {
+  free(card_data->card);
+  card_data->card = NULL;
+  free(card_data);
+  card_data = NULL;
   lv_obj_del(label);
   lv_obj_del(list);
 }

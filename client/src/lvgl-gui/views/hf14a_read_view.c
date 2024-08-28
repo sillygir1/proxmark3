@@ -25,10 +25,14 @@ static void event_handler(lv_event_t *e) {
     const char *button_text = lv_list_get_btn_text(list, obj);
     lv_obj_t *chb;
     if (strcmp(button_text, options[0]) == 0) {
-      iso14a_card_select_t card =
+      iso14a_card_select_t *card =
           hf14a_read(keep_field, skip_RATS, ecp, magsafe);
-      if (card.uidlen > 0)
-        view_manager_switch_view(view_manager, VIEW_HF14ACARD, &card);
+      if (card && card->uidlen > 0) {
+        CardData *card_data = malloc(sizeof(*card_data));
+        card_data->card = card;
+        card_data->prev_view = VIEW_HF14AREAD;
+        view_manager_switch_view(view_manager, VIEW_HF14ACARD, card_data);
+      }
     } else {
       chb = lv_obj_get_child(obj, -1);
       if (lv_obj_has_state(chb, LV_STATE_CHECKED)) {

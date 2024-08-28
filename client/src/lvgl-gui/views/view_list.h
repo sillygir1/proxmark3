@@ -10,6 +10,7 @@ typedef enum {
   VIEW_HF14ASIM,
   VIEW_MIFARE_CLASSIC,
 
+  VIEW_FILE_MANAGER,
   VIEW_COUNT, // Always last element
 } ViewList;
 
