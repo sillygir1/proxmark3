@@ -782,11 +782,14 @@ SRCS += bucketsort.c \
 		lfdemod.c \
 		util_posix.c
 
-# LVGL stuff
+# Pilk-v-software
 SRCS += $(PILK_SOFTWARE)/duo-encoder-kb/encoder.c \
 		$(PILK_SOFTWARE)/view-manager/view_manager.c \
 		$(PILK_SOFTWARE)/duo-battery/battery.c \
-		$(LVGL_DIR)/../lv_drivers/display/fbdev.c \
+		$(PILK_SOFTWARE)/storage/storage.c
+		
+# LVGL stuff
+SRCS += $(LVGL_DIR)/../lv_drivers/display/fbdev.c \
 		$(LVGL_DIR)/../lv_drivers/indev/evdev.c \
 		$(LVGL_DIR)/src/core/lv_disp.c \
 		$(LVGL_DIR)/src/core/lv_event.c \
