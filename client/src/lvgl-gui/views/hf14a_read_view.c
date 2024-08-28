@@ -1,6 +1,7 @@
 #include "hf14a_read_view.h"
 #include "../../cmdhf14a.h"
 #include "../../comms.h"
+#include "../gui_common.h"
 #include "view_list.h"
 #include "view_manager.h"
 #include <mifare.h>
@@ -15,36 +16,6 @@ bool skip_RATS;
 static const char *options[OPTIONS_NUM] = {"Read", "Leave field ON", "Use ECP",
                                            "Magsafe", "Skip RATS"};
 
-static void hf14a_read(ViewManager *view_manager) {
-  uint32_t cm = ISO14A_CONNECT;
-  if (keep_field)
-    cm |= ISO14A_NO_DISCONNECT;
-  if (skip_RATS)
-    cm |= ISO14A_NO_RATS;
-  if (ecp || magsafe) {
-    iso14a_polling_parameters_t *polling_parameters = NULL;
-    iso14a_polling_parameters_t parameters =
-        iso14a_get_polling_parameters(ecp, magsafe);
-    cm |= ISO14A_USE_CUSTOM_POLLING;
-    polling_parameters = &parameters;
-    SendCommandMIX(CMD_HF_ISO14443A_READER, cm, 0, 0,
-                   (uint8_t *)polling_parameters,
-                   sizeof(iso14a_polling_parameters_t));
-  } else {
-    SendCommandMIX(CMD_HF_ISO14443A_READER, cm, 0, 0, NULL, 0);
-  }
-
-  PacketResponseNG resp;
-  WaitForResponseTimeout(CMD_ACK, &resp, 2500);
-  DropField();
-  iso14a_card_select_t card;
-  memcpy(&card, (iso14a_card_select_t *)resp.data.asBytes,
-         sizeof(iso14a_card_select_t));
-
-  if (card.uidlen > 0)
-    view_manager_switch_view(view_manager, VIEW_HF14ACARD, &card);
-}
-
 static void event_handler(lv_event_t *e) {
   lv_event_code_t code = lv_event_get_code(e);
   lv_obj_t *obj = lv_event_get_target(e);
@@ -54,7 +25,10 @@ static void event_handler(lv_event_t *e) {
     const char *button_text = lv_list_get_btn_text(list, obj);
     lv_obj_t *chb;
     if (strcmp(button_text, options[0]) == 0) {
-      hf14a_read(view_manager);
+      iso14a_card_select_t card =
+          hf14a_read(keep_field, skip_RATS, ecp, magsafe);
+      if (card.uidlen > 0)
+        view_manager_switch_view(view_manager, VIEW_HF14ACARD, &card);
     } else {
       chb = lv_obj_get_child(obj, -1);
       if (lv_obj_has_state(chb, LV_STATE_CHECKED)) {

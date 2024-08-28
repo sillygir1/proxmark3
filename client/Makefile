@@ -949,6 +949,7 @@ SRCS += $(PILK_SOFTWARE)/duo-encoder-kb/encoder.c \
 
 # LVGL gui files
 SRCS += lvgl-gui/gui.c \
+		lvgl-gui/gui_common.c \
 		lvgl-gui/views/view_list.c \
 		lvgl-gui/views/main_menu_view.c \
 		lvgl-gui/views/hf14a_view.c \
