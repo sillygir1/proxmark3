@@ -4,11 +4,9 @@
 
 static lv_obj_t *list;
 
-#define ITEMS_NUM 5
-static const char *menu_items[ITEMS_NUM] = {"Read tag", "Tag info",
-                                            "Simulate tag", "Sniff", "Dummy 1"};
+#define ITEMS_NUM 3
+static const char *menu_items[ITEMS_NUM] = {"Read tag", "Saved tags", "Sniff"};
 static const char *menu_icons[ITEMS_NUM] = {LV_SYMBOL_LIST, LV_SYMBOL_LIST,
-                                            LV_SYMBOL_LIST, LV_SYMBOL_LIST,
                                             LV_SYMBOL_LIST};
 
 static void event_handler(lv_event_t *e) {
@@ -22,10 +20,12 @@ static void event_handler(lv_event_t *e) {
     if (strcmp(button_text, menu_items[0]) == 0) {
       view_manager_switch_view(view_manager, VIEW_HF14AREAD, NULL);
     } else if (strcmp(button_text, menu_items[1]) == 0) {
-      // view_manager_switch_view(view_manager, VIEW_HF14AINFO);
-    } else if (strcmp(button_text, menu_items[2]) == 0) {
-      // view_manager_switch_view(view_manager, VIEW_HF14ASIM);
-    } else if (strcmp(button_text, menu_items[3]) == 1) {
+      FileManagerData *fm_data = malloc(sizeof(*fm_data));
+      fm_data->prev_view = view_manager_current_view(view_manager);
+      fm_data->dir = ISO14443A_PATH;
+      fm_data->type = TYPE_ISO14443A;
+      view_manager_switch_view(view_manager, VIEW_FILE_MANAGER, fm_data);
+    } else if (strcmp(button_text, menu_items[2]) == 1) {
       // view_manager_switch_view(view_manager, VIEW_HF14ASNIFF);
     }
   } else if (code == LV_EVENT_KEY) {

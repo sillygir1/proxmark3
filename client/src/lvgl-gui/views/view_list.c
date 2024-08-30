@@ -1,4 +1,5 @@
 #include "view_list.h"
+#include "file_manager_view.h"
 #include "hf14a_card_view.h"
 #include "hf14a_read_view.h"
 #include "hf14a_view.h"
@@ -16,4 +17,6 @@ void views_init(void *_view_manager) {
                         VIEW_HF14AREAD);
   view_manager_add_view(view_manager, &hf14a_card_init, &hf14a_card_exit,
                         VIEW_HF14ACARD);
+  view_manager_add_view(view_manager, &file_manager_init, &file_manager_exit,
+                        VIEW_FILE_MANAGER);
 }
