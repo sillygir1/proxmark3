@@ -65,7 +65,7 @@ void hf14a_card_init(void *_view_manager, void *ctx) {
   btn = lv_list_add_btn(list, LV_SYMBOL_LIST, "Simulate");
   lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
   if (card_data->prev_view == VIEW_HF14AREAD) {
-    btn = lv_list_add_btn(list, LV_SYMBOL_LIST, "Simulate");
+    btn = lv_list_add_btn(list, LV_SYMBOL_LIST, "Save");
     lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
   }
   label = lv_label_create(view_manager->obj_parent);
