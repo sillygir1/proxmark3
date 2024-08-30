@@ -1,7 +1,25 @@
+#pragma once
 #include "../cmdhf14a.h"
 #include "../comms.h"
+#include "storage.h"
 #include "view_manager.h"
 #include <mifare.h>
+
+typedef enum {
+  TYPE_NONE = 0,
+  TYPE_ISO14443A,
+  TYPE_MIFARECLASSIC,
+
+  TYPE_COUNT,
+} CardType;
+
+typedef struct {
+  CardType type;
+  char *filename;
+  char *dir;
+  uint8_t prev_view;
+  bool leaving;
+} FileManagerData;
 
 typedef struct {
   void *card;
