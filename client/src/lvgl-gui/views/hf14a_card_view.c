@@ -1,5 +1,6 @@
 #include "../../cmdhf14a.h"
 #include "../../comms.h"
+#include "../file_system.h"
 #include "../gui_common.h"
 #include "hf14a_read_view.h"
 #include "storage.h"
@@ -9,32 +10,10 @@
 
 static lv_obj_t *label;
 static lv_obj_t *list;
-CardData *card_data;
+static CardData *card_data;
 
 #define OPTIONS_NUM 2
-static const char *options[OPTIONS_NUM] = {"Save", "Simulate"};
-
-static int save_card() {
-  iso14a_card_select_t *card = card_data->card;
-  char *filename = malloc(sizeof(char) * 64);
-  memset(filename, 0, 64);
-  char *path = "/root/pilk/uid/";
-
-  char buff[256];
-  for (uint8_t i = 0; i < card->uidlen; i++) {
-    snprintf(buff, 3, "%02X", card->uid[i]);
-    strcat(filename, buff);
-  }
-  char uid[15];
-  memset(uid, 0, 15);
-  strncpy(uid, filename, 2 * card->uidlen);
-  strcat(filename, ".uid");
-  printf("Saving to %s\n", filename);
-  snprintf(buff, 256, "%s\n%02X%02X\n%02X\n", uid, card->atqa[1], card->atqa[0],
-           card->sak);
-  storage_file_write(path, filename, buff);
-  free(filename);
-}
+static const char *options[OPTIONS_NUM] = {"Simulate", "Save"};
 
 static void event_handler(lv_event_t *e) {
   lv_event_code_t code = lv_event_get_code(e);
@@ -45,10 +24,10 @@ static void event_handler(lv_event_t *e) {
     const char *button_text = lv_list_get_btn_text(list, obj);
     lv_obj_t *chb;
     if (strcmp(button_text, options[0]) == 0) {
-      // Save
-      save_card();
-    } else if (strcmp(button_text, options[1]) == 0) {
       // Simulate
+    } else if (strcmp(button_text, options[1]) == 0) {
+      // Save
+      fs_save_card(card_data->card, TYPE_ISO14443A);
     }
   } else if (code == LV_EVENT_KEY) {
     if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
@@ -63,23 +42,26 @@ void hf14a_card_init(void *_view_manager, void *ctx) {
   if (!card_data)
     card_data = ctx;
   uint8_t list_height = 80;
+
+  iso14a_card_select_t *card = card_data->card;
+  list = lv_list_create(view_manager->obj_parent);
+  lv_obj_set_style_radius(list, 0, LV_PART_MAIN);
+  lv_obj_align(list, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+
   switch (card_data->prev_view) {
+  case VIEW_FILE_MANAGER:
+    list_height = 40;
+    break;
   case VIEW_HF14AREAD:
     list_height = 80;
     break;
-  // case VIEW_FILE_MANAGER:
-  //   // Do no show "save" button
-  //   break;
   default:
     printf("Something's wrong, exiting...");
     raise(SIGINT);
     break;
   }
-  iso14a_card_select_t *card = card_data->card;
-  list = lv_list_create(view_manager->obj_parent);
-  lv_obj_set_style_radius(list, 0, LV_PART_MAIN);
+
   lv_obj_set_size(list, 240, list_height);
-  lv_obj_align(list, LV_ALIGN_BOTTOM_LEFT, 0, 0);
 
   lv_obj_t *btn;
   for (uint8_t i = 0; i < OPTIONS_NUM; i++) {
@@ -93,7 +75,7 @@ void hf14a_card_init(void *_view_manager, void *ctx) {
   lv_obj_set_style_text_line_space(label, 5, LV_PART_MAIN);
   lv_obj_align(label, LV_ALIGN_TOP_LEFT, 10, 10);
 
-  if (!card->uidlen && card->uidlen > 7) {
+  if (!card->uidlen && card->uidlen > 10) {
     printf("No card found\n");
     return;
   }

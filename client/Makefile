@@ -787,7 +787,7 @@ SRCS += $(PILK_SOFTWARE)/duo-encoder-kb/encoder.c \
 		$(PILK_SOFTWARE)/view-manager/view_manager.c \
 		$(PILK_SOFTWARE)/duo-battery/battery.c \
 		$(PILK_SOFTWARE)/storage/storage.c
-		
+
 # LVGL stuff
 SRCS += $(LVGL_DIR)/../lv_drivers/display/fbdev.c \
 		$(LVGL_DIR)/../lv_drivers/indev/evdev.c \
@@ -880,35 +880,11 @@ SRCS += $(LVGL_DIR)/../lv_drivers/display/fbdev.c \
 		$(LVGL_DIR)/src/extra/widgets/tileview/lv_tileview.c \
 		$(LVGL_DIR)/src/extra/widgets/win/lv_win.c \
 		$(LVGL_DIR)/src/font/lv_font.c \
-		$(LVGL_DIR)/src/font/lv_font_dejavu_16_persian_hebrew.c \
 		$(LVGL_DIR)/src/font/lv_font_fmt_txt.c \
 		$(LVGL_DIR)/src/font/lv_font_loader.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_10.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_12.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_12_subpx.c \
 		$(LVGL_DIR)/src/font/lv_font_montserrat_14.c \
 		$(LVGL_DIR)/src/font/lv_font_montserrat_16.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_18.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_20.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_22.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_24.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_26.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_28.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_28_compressed.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_30.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_32.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_34.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_36.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_38.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_40.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_42.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_44.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_46.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_48.c \
-		$(LVGL_DIR)/src/font/lv_font_montserrat_8.c \
 		$(LVGL_DIR)/src/font/lv_font_simsun_16_cjk.c \
-		$(LVGL_DIR)/src/font/lv_font_unscii_16.c \
-		$(LVGL_DIR)/src/font/lv_font_unscii_8.c \
 		$(LVGL_DIR)/src/hal/lv_hal_disp.c \
 		$(LVGL_DIR)/src/hal/lv_hal_indev.c \
 		$(LVGL_DIR)/src/hal/lv_hal_tick.c \
@@ -954,11 +930,13 @@ SRCS += $(LVGL_DIR)/../lv_drivers/display/fbdev.c \
 # LVGL gui files
 SRCS += lvgl-gui/gui.c \
 		lvgl-gui/gui_common.c \
+		lvgl-gui/file_system.c \
 		lvgl-gui/views/view_list.c \
 		lvgl-gui/views/main_menu_view.c \
 		lvgl-gui/views/hf14a_view.c \
 		lvgl-gui/views/hf14a_read_view.c \
-		lvgl-gui/views/hf14a_card_view.c
+		lvgl-gui/views/hf14a_card_view.c \
+		lvgl-gui/views/file_manager_view.c
 
 ifeq ($(GD_FOUND),1)
     # electronic shelf labels
