@@ -14,14 +14,6 @@ typedef enum {
 } CardType;
 
 typedef struct {
-  CardType type;
-  char *filename;
-  char *dir;
-  uint8_t prev_view;
-  bool leaving;
-} FileManagerData;
-
-typedef struct {
   void *card;
   uint8_t prev_view;
 } CardData;

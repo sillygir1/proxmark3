@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../file_system.h"
 #include "../gui.h"
 #include "../gui_common.h"
 #include "storage.h"

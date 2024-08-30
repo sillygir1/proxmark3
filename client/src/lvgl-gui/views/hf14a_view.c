@@ -21,7 +21,7 @@ static void event_handler(lv_event_t *e) {
       view_manager_switch_view(view_manager, VIEW_HF14AREAD, NULL);
     } else if (strcmp(button_text, menu_items[1]) == 0) {
       FileManagerData *fm_data = malloc(sizeof(*fm_data));
-      fm_data->prev_view = view_manager_current_view(view_manager);
+      fm_data->prev_view = VIEW_HF14A;
       fm_data->dir = ISO14443A_PATH;
       fm_data->type = TYPE_ISO14443A;
       view_manager_switch_view(view_manager, VIEW_FILE_MANAGER, fm_data);

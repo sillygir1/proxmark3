@@ -12,9 +12,6 @@ static lv_obj_t *label;
 static lv_obj_t *list;
 static CardData *card_data;
 
-#define OPTIONS_NUM 2
-static const char *options[OPTIONS_NUM] = {"Simulate", "Save"};
-
 static void event_handler(lv_event_t *e) {
   lv_event_code_t code = lv_event_get_code(e);
   lv_obj_t *obj = lv_event_get_target(e);
@@ -23,15 +20,15 @@ static void event_handler(lv_event_t *e) {
   if (code == LV_EVENT_CLICKED) {
     const char *button_text = lv_list_get_btn_text(list, obj);
     lv_obj_t *chb;
-    if (strcmp(button_text, options[0]) == 0) {
+    if (strcmp(button_text, "Simulate") == 0) {
       // Simulate
-    } else if (strcmp(button_text, options[1]) == 0) {
+    } else if (strcmp(button_text, "Save") == 0) {
       // Save
       fs_save_card(card_data->card, TYPE_ISO14443A);
     }
   } else if (code == LV_EVENT_KEY) {
     if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
-      view_manager_switch_view(view_manager, VIEW_HF14AREAD, NULL);
+      view_manager_switch_view(view_manager, card_data->prev_view, NULL);
     }
   }
 }
@@ -44,9 +41,6 @@ void hf14a_card_init(void *_view_manager, void *ctx) {
   uint8_t list_height = 80;
 
   iso14a_card_select_t *card = card_data->card;
-  list = lv_list_create(view_manager->obj_parent);
-  lv_obj_set_style_radius(list, 0, LV_PART_MAIN);
-  lv_obj_align(list, LV_ALIGN_BOTTOM_LEFT, 0, 0);
 
   switch (card_data->prev_view) {
   case VIEW_FILE_MANAGER:
@@ -61,14 +55,19 @@ void hf14a_card_init(void *_view_manager, void *ctx) {
     break;
   }
 
+  list = lv_list_create(view_manager->obj_parent);
+  lv_obj_set_style_radius(list, 0, LV_PART_MAIN);
+  lv_obj_align(list, LV_ALIGN_BOTTOM_LEFT, 0, 0);
   lv_obj_set_size(list, 240, list_height);
 
   lv_obj_t *btn;
-  for (uint8_t i = 0; i < OPTIONS_NUM; i++) {
-    btn = lv_list_add_btn(list, LV_SYMBOL_LIST, options[i]);
+
+  btn = lv_list_add_btn(list, LV_SYMBOL_LIST, "Simulate");
+  lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
+  if (card_data->prev_view == VIEW_HF14AREAD) {
+    btn = lv_list_add_btn(list, LV_SYMBOL_LIST, "Simulate");
     lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
   }
-
   label = lv_label_create(view_manager->obj_parent);
   lv_obj_set_size(label, 220, 200);
   lv_obj_set_style_text_font(label, &lv_font_montserrat_16, LV_PART_MAIN);

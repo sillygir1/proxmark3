@@ -20,8 +20,9 @@ static void event_handler(lv_event_t *e) {
     switch (fm_data->type) {
     case TYPE_ISO14443A:;
       CardData *card_data = malloc(sizeof(*card_data));
-      // card_data->card = fs_read_card();
-      view_manager_switch_view(view_manager, VIEW_HF14ACARD, fm_data);
+      card_data->card = fs_read_card(fm_data);
+      card_data->prev_view = VIEW_FILE_MANAGER;
+      view_manager_switch_view(view_manager, VIEW_HF14ACARD, card_data);
       break;
     }
 
@@ -56,7 +57,9 @@ void file_manager_init(void *_view_manager, void *ctx) {
 }
 
 void file_manager_exit() {
-  if (fm_data && fm_data->leaving)
+  if (fm_data && fm_data->leaving) {
     free(fm_data);
+    fm_data = NULL;
+  }
   lv_obj_del(list);
 }
