@@ -49,11 +49,16 @@ void file_manager_init(void *_view_manager, void *ctx) {
 
   lv_obj_t *btn;
   int n = storage_dir_list(fm_data->dir, arr, DIR_LIST_LEN);
-  for (uint8_t i = 0; i < n; i++) {
-    btn = lv_list_add_btn(list, LV_SYMBOL_SAVE, arr[i]);
-    lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
-    free(arr[i]);
-  }
+  if (n == 0) {
+    btn = lv_list_add_btn(list, LV_SYMBOL_CLOSE, "No saved files");
+    lv_obj_add_event_cb(btn, event_handler, LV_EVENT_KEY, view_manager);
+
+  } else
+    for (uint8_t i = 0; i < n; i++) {
+      btn = lv_list_add_btn(list, LV_SYMBOL_SAVE, arr[i]);
+      lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
+      free(arr[i]);
+    }
 }
 
 void file_manager_exit() {
