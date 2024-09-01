@@ -9,7 +9,7 @@ typedef struct {
   CardType type;
   char *filename;
   char *dir;
-  uint8_t prev_view;
+  uint16_t prev_view;
   bool leaving;
 } FileManagerData;
 
