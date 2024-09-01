@@ -11,6 +11,17 @@
 static lv_obj_t *label;
 static lv_obj_t *list;
 static CardData *card_data;
+static lv_timer_t *timer;
+static bool simulating;
+
+static void simulate_timer(lv_timer_t *timer) {
+  PacketResponseNG resp = {0};
+  if (WaitForResponseTimeout(CMD_HF_MIFARE_SIMULATE, &resp, 100) == 0)
+    return;
+  simulating = false;
+  set_mode_text("ISO 14443-A card");
+  lv_timer_pause(timer);
+}
 
 static void simulate_uid() {
   iso14a_card_select_t *card = card_data->card;
@@ -42,6 +53,8 @@ static void simulate_uid() {
   memcpy(payload.uid, card->uid, card->uidlen);
 
   clearCommandBuffer();
+  set_mode_text("Simulating ISO 14443-A");
+  lv_timer_resume(timer);
   SendCommandNG(CMD_HF_ISO14443A_SIMULATE, (uint8_t *)&payload,
                 sizeof(payload));
 }
@@ -56,13 +69,18 @@ static void event_handler(lv_event_t *e) {
     lv_obj_t *chb;
     if (strcmp(button_text, "Simulate") == 0) {
       // Simulate
-      simulate_uid();
+      if (!simulating) {
+        simulating = true;
+        simulate_uid();
+      }
     } else if (strcmp(button_text, "Save") == 0) {
       // Save
       fs_save_card(card_data->card, TYPE_ISO14443A);
     }
   } else if (code == LV_EVENT_KEY) {
     if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
+      if (simulating)
+        SendCommandNG(CMD_BREAK_LOOP, NULL, 0);
       view_manager_switch_view(view_manager, card_data->prev_view, NULL);
     }
   }
@@ -70,9 +88,14 @@ static void event_handler(lv_event_t *e) {
 
 void hf14a_card_init(void *_view_manager, void *ctx) {
   set_mode_text("ISO 14443-A card");
+  simulating = false;
+  timer = lv_timer_create(simulate_timer, 500, NULL);
+  lv_timer_pause(timer);
+
   ViewManager *view_manager = _view_manager;
   if (!card_data)
     card_data = ctx;
+
   uint8_t list_height = 80;
 
   iso14a_card_select_t *card = card_data->card;
@@ -139,6 +162,7 @@ void hf14a_card_exit() {
   card_data->card = NULL;
   free(card_data);
   card_data = NULL;
+  lv_timer_del(timer);
   lv_obj_del(label);
   lv_obj_del(list);
 }
