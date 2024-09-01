@@ -32,8 +32,30 @@ static void simulate_uid() {
     uint8_t exitAfter;
   } PACKED payload;
 
-  // TODO: determine tag type
-  payload.tagtype = MTCLASSIC;
+  int type = detect_nxp_card(card->sak, *(uint16_t *)card->atqa, 0);
+  switch (type) {
+  case MTCLASSIC:
+    payload.tagtype = 1;
+    break;
+  case MTMINI:
+    payload.tagtype = 6;
+    break;
+  case MTDESFIRE:
+    payload.tagtype = 3;
+    break;
+  case MTULTRALIGHT:
+    payload.tagtype = 2;
+    break;
+  case HID_SEOS:
+    payload.tagtype = 12;
+    break;
+  case MTFUDAN:
+    payload.tagtype = 9;
+    break;
+  default:
+    payload.tagtype = MTCLASSIC;
+    break;
+  }
 
   payload.flags = 0;
   switch (card->uidlen) {
