@@ -928,16 +928,17 @@ SRCS += $(LVGL_DIR)/../lv_drivers/display/fbdev.c \
 		$(LVGL_DIR)/src/widgets/lv_textarea.c
 
 # LVGL gui files
-SRCS += lvgl-gui/gui.c \
+SRCS += lvgl-gui/file_system.c \
+		lvgl-gui/gui.c \
 		lvgl-gui/gui_common.c \
-		lvgl-gui/file_system.c \
-		lvgl-gui/views/view_list.c \
-		lvgl-gui/views/main_menu_view.c \
-		lvgl-gui/views/hf14a_view.c \
-		lvgl-gui/views/hf14a_read_view.c \
+		lvgl-gui/views/file_manager_view.c \
 		lvgl-gui/views/hf14a_card_view.c \
+		lvgl-gui/views/hf14a_read_view.c \
 		lvgl-gui/views/hf14a_sniff_view.c \
-		lvgl-gui/views/file_manager_view.c
+		lvgl-gui/views/hf14a_view.c \
+		lvgl-gui/views/hf_trace_view.c \
+		lvgl-gui/views/main_menu_view.c \
+		lvgl-gui/views/view_list.c 
 
 ifeq ($(GD_FOUND),1)
     # electronic shelf labels

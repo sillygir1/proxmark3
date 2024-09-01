@@ -4,6 +4,7 @@
 #include "hf14a_read_view.h"
 #include "hf14a_sniff_view.h"
 #include "hf14a_view.h"
+#include "hf_trace_view.h"
 #include "main_menu_view.h"
 #include "view_manager.h"
 
@@ -20,6 +21,8 @@ void views_init(void *_view_manager) {
                         VIEW_HF14ACARD);
   view_manager_add_view(view_manager, &hf14a_sniff_init, &hf14a_sniff_exit,
                         VIEW_HF14ASNIFF);
+  view_manager_add_view(view_manager, &hf_trace_init, &hf_trace_exit,
+                        VIEW_HFTRACE);
   view_manager_add_view(view_manager, &file_manager_init, &file_manager_exit,
                         VIEW_FILE_MANAGER);
 }

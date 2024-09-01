@@ -4,10 +4,11 @@
 
 static lv_obj_t *list;
 
-#define ITEMS_NUM 3
-static const char *menu_items[ITEMS_NUM] = {"Read tag", "Saved tags", "Sniff"};
-static const char *menu_icons[ITEMS_NUM] = {LV_SYMBOL_LIST, LV_SYMBOL_LIST,
-                                            LV_SYMBOL_LIST};
+#define ITEMS_NUM 4
+static const char *menu_items[ITEMS_NUM] = {"Read tag", "Saved tags", "Sniff",
+                                            "Trace"};
+static const char *menu_icons[ITEMS_NUM] = {LV_SYMBOL_FILE, LV_SYMBOL_DIRECTORY,
+                                            LV_SYMBOL_EYE_OPEN, LV_SYMBOL_LIST};
 
 static void event_handler(lv_event_t *e) {
   lv_event_code_t code = lv_event_get_code(e);
@@ -27,6 +28,11 @@ static void event_handler(lv_event_t *e) {
       view_manager_switch_view(view_manager, VIEW_FILE_MANAGER, fm_data);
     } else if (strcmp(button_text, menu_items[2]) == 0) {
       view_manager_switch_view(view_manager, VIEW_HF14ASNIFF, NULL);
+    } else if (strcmp(button_text, menu_items[3]) == 0) {
+      TraceData *td = malloc(sizeof(*td));
+      td->prev_view = VIEW_HF14A;
+      td->type = TYPE_ISO14443A;
+      view_manager_switch_view(view_manager, VIEW_HFTRACE, td);
     }
   } else if (code == LV_EVENT_KEY) {
     if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
