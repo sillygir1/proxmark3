@@ -30,6 +30,8 @@ void gui_init();
 
 void set_mode_text(char *text);
 
+void clear_input();
+
 void gui_loop();
 
 // From <time.h>

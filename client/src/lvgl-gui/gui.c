@@ -94,6 +94,15 @@ void set_mode_text(char *text) {
   lv_label_set_text(proxmark_data->mode_label, text);
 }
 
+void clear_input() {
+  while (proxmark_data->enc_data->inputQueue[INPUT_DEVICE_ENCODER]->QueueSize) {
+    input_queue_read(proxmark_data->enc_data->inputQueue[INPUT_DEVICE_ENCODER]);
+  }
+  while (proxmark_data->enc_data->inputQueue[INPUT_DEVICE_BUTTONS]->QueueSize) {
+    input_queue_read(proxmark_data->enc_data->inputQueue[INPUT_DEVICE_BUTTONS]);
+  }
+}
+
 static void event_handler(lv_event_t *e) {
   lv_event_code_t code = lv_event_get_code(e);
   lv_obj_t *obj = lv_event_get_target(e);
