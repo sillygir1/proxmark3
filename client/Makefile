@@ -936,6 +936,7 @@ SRCS += lvgl-gui/gui.c \
 		lvgl-gui/views/hf14a_view.c \
 		lvgl-gui/views/hf14a_read_view.c \
 		lvgl-gui/views/hf14a_card_view.c \
+		lvgl-gui/views/hf14a_sniff_view.c \
 		lvgl-gui/views/file_manager_view.c
 
 ifeq ($(GD_FOUND),1)

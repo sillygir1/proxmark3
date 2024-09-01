@@ -25,8 +25,8 @@ static void event_handler(lv_event_t *e) {
       fm_data->dir = ISO14443A_PATH;
       fm_data->type = TYPE_ISO14443A;
       view_manager_switch_view(view_manager, VIEW_FILE_MANAGER, fm_data);
-    } else if (strcmp(button_text, menu_items[2]) == 1) {
-      // view_manager_switch_view(view_manager, VIEW_HF14ASNIFF);
+    } else if (strcmp(button_text, menu_items[2]) == 0) {
+      view_manager_switch_view(view_manager, VIEW_HF14ASNIFF, NULL);
     }
   } else if (code == LV_EVENT_KEY) {
     if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
