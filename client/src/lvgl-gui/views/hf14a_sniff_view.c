@@ -66,6 +66,7 @@ void hf14a_sniff_init(void *_view_manager, void *ctx) {
   set_mode_text("ISO 14443-A sniff");
   sniffing = false;
   timer = lv_timer_create(sniff_timer, 500, NULL);
+  lv_timer_pause(timer);
 
   ViewManager *view_manager = _view_manager;
   list = lv_list_create(view_manager->obj_parent);
