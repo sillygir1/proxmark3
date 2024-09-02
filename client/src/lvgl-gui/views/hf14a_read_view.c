@@ -79,6 +79,7 @@ void hf14a_read_init(void *_view_manager, void *ctx) {
   timer = lv_timer_create(read_timer, 200, NULL);
   lv_timer_pause(timer);
   reading = false;
+  set_fpga_mode(FPGA_BITSTREAM_HF);
 
   ViewManager *view_manager = _view_manager;
   list = lv_list_create(view_manager->obj_parent);

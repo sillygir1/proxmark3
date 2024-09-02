@@ -67,6 +67,7 @@ void hf14a_sniff_init(void *_view_manager, void *ctx) {
   sniffing = false;
   timer = lv_timer_create(sniff_timer, 500, NULL);
   lv_timer_pause(timer);
+  set_fpga_mode(FPGA_BITSTREAM_HF);
 
   ViewManager *view_manager = _view_manager;
   list = lv_list_create(view_manager->obj_parent);
