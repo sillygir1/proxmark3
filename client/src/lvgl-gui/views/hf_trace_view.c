@@ -5,7 +5,8 @@
 static lv_obj_t *list;
 static uint8_t *trace;
 static uint16_t trace_len;
-TraceData *trace_data;
+static TraceData *trace_data;
+static ViewManager *view_manager;
 
 static int trace_download() {
   // We be copying code from private functions
@@ -61,11 +62,57 @@ static void event_handler(lv_event_t *e) {
   }
 }
 
-void hf_trace_init(void *_view_manager, void *ctx) {
-  ViewManager *view_manager = _view_manager;
-  trace_data = ctx;
+static int trace_draw() {
+  tracelog_hdr_t *first_hdr = (tracelog_hdr_t *)(trace);
+  uint16_t trace_pos = 0;
+  char line[512];
+  lv_obj_t *btn;
 
-  set_mode_text("Trace");
+  memset(line, 0, 512);
+  snprintf(line, 32, "Trace length: %u", trace_len);
+  btn = lv_list_add_btn(list, LV_SYMBOL_LIST, line);
+  lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
+
+  while ((trace_pos + TRACELOG_HDR_LEN) < trace_len) {
+    memset(line, 0, 512);
+    tracelog_hdr_t *hdr = (tracelog_hdr_t *)(trace + trace_pos);
+    uint16_t data_len = hdr->data_len;
+    uint8_t *frame = hdr->frame;
+    for (uint8_t i = 0; i < data_len; i++) {
+      char buff[4] = {0, 0, 0, 0};
+      snprintf(buff, 4, "%02X ", frame[i]);
+      strcat(line, buff);
+    }
+    char explanation[60] = {0};
+    switch (trace_data->type) {
+    case TYPE_ISO14443A:
+      annotateIso14443a(explanation, sizeof(explanation), frame, data_len,
+                        hdr->isResponse);
+      break;
+    }
+
+    if (strlen(explanation) > 0)
+      lv_list_add_text(list, explanation);
+    btn = lv_list_add_btn(
+        list, hdr->isResponse ? LV_SYMBOL_DOWNLOAD : LV_SYMBOL_UPLOAD, line);
+    lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
+
+    trace_pos += TRACELOG_HDR_LEN + data_len + TRACELOG_PARITY_LEN(hdr);
+  }
+}
+
+void hf_trace_init(void *_view_manager, void *ctx) {
+  view_manager = _view_manager;
+  trace_data = ctx;
+  switch (trace_data->type) {
+  case TYPE_ISO14443A:
+    set_mode_text("Trace ISO 14443-A");
+    break;
+  default:
+    printf("Type %d not implemented yet\n", trace_data->type);
+    view_manager_switch_view(view_manager, trace_data->prev_view, NULL);
+    return;
+  }
   list = lv_list_create(view_manager->obj_parent);
   lv_obj_set_style_radius(list, 0, LV_PART_MAIN);
   lv_obj_set_width(list, 240);
@@ -73,16 +120,14 @@ void hf_trace_init(void *_view_manager, void *ctx) {
   if (trace_download() != 0) {
     printf("Can't download trace!\n");
     view_manager_switch_view(view_manager, trace_data->prev_view, NULL);
+    return;
   }
+  trace_draw();
   lv_obj_t *btn;
   if (trace_len == 0) {
     btn = lv_list_add_btn(list, LV_SYMBOL_CLOSE, "No trace");
     lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
     return;
-  }
-  for (uint8_t i = 0; i < 100; i++) {
-    btn = lv_list_add_btn(list, LV_SYMBOL_LIST, "Placeholder");
-    lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
   }
 }
 

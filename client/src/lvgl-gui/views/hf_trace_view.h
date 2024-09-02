@@ -2,6 +2,7 @@
 
 #include "../gui.h"
 #include "../gui_common.h"
+#include <cmdhflist.h>
 #include <comms.h>
 #include <pm3_cmd.h>
 
