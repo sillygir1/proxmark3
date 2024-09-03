@@ -25,7 +25,6 @@ static void event_handler(lv_event_t *e) {
       view_manager_switch_view(view_manager, VIEW_HF14ACARD, card_data);
       break;
     }
-
   } else if (code == LV_EVENT_KEY) {
     if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
       fm_data->leaving = true;
@@ -47,18 +46,23 @@ void file_manager_init(void *_view_manager, void *ctx) {
   fm_data->leaving = false;
   char *arr[DIR_LIST_LEN];
 
+  bool skip_dirs = true;
+  if (fm_data->type == TYPE_NONE) {
+    skip_dirs = false;
+  }
+
   lv_obj_t *btn;
-  int n = storage_dir_list(fm_data->dir, arr, DIR_LIST_LEN);
+  int n = storage_dir_list(fm_data->dir, arr, DIR_LIST_LEN, skip_dirs);
   if (n == 0) {
     btn = lv_list_add_btn(list, LV_SYMBOL_CLOSE, "No saved files");
     lv_obj_add_event_cb(btn, event_handler, LV_EVENT_KEY, view_manager);
-
-  } else
+  } else {
     for (uint8_t i = 0; i < n; i++) {
       btn = lv_list_add_btn(list, LV_SYMBOL_SAVE, arr[i]);
       lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
       free(arr[i]);
     }
+  }
 }
 
 void file_manager_exit() {

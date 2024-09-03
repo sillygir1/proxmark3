@@ -6,7 +6,7 @@ static lv_obj_t *list;
 
 #define ITEMS_NUM 4
 static const char *menu_items[ITEMS_NUM] = {"ISO 14443-A", "Mifare Classic",
-                                            "Copy UID", "Saved dumps"};
+                                            "Copy UID", "Browse files"};
 static const char *menu_icons[ITEMS_NUM] = {
     LV_SYMBOL_LIST, LV_SYMBOL_LIST, LV_SYMBOL_COPY, LV_SYMBOL_DIRECTORY};
 
@@ -20,6 +20,12 @@ static void event_handler(lv_event_t *e) {
     // Switch view
     if (strcmp(button_text, menu_items[0]) == 0) {
       view_manager_switch_view(view_manager, VIEW_HF14A, NULL);
+    } else if (strcmp(button_text, "Browse files") == 0) {
+      FileManagerData *fm_data = malloc(sizeof(*fm_data));
+      fm_data->prev_view = VIEW_MAIN_MENU;
+      fm_data->dir = DEFAULT_PATH;
+      fm_data->type = TYPE_NONE;
+      view_manager_switch_view(view_manager, VIEW_FILE_MANAGER, fm_data);
     }
   } else if (code == LV_EVENT_KEY) {
     if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {

@@ -2,7 +2,9 @@
 #include "gui_common.h"
 #include "storage.h"
 
+#define DEFAULT_PATH "/root/pilk/"
 #define ISO14443A_PATH "/root/pilk/uid/"
+#define ISO14443A_EXT ".uid"
 #define ISO14443A_HEADER "ISO14443A_CARD"
 #define MFC_PATH "/root/pilk/mfc/"
 
