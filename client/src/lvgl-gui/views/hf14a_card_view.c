@@ -10,7 +10,7 @@
 
 static lv_obj_t *label;
 static lv_obj_t *list;
-static CardData *card_data;
+static UserData *card_data;
 static lv_timer_t *timer;
 static bool simulating;
 
@@ -24,7 +24,7 @@ static void simulate_timer(lv_timer_t *timer) {
 }
 
 static void simulate_uid() {
-  iso14a_card_select_t *card = card_data->card;
+  iso14a_card_select_t *card = card_data->data;
   struct {
     uint8_t tagtype;
     uint16_t flags;
@@ -97,7 +97,7 @@ static void event_handler(lv_event_t *e) {
       }
     } else if (strcmp(button_text, "Save") == 0) {
       // Save
-      fs_save_card(card_data->card, TYPE_ISO14443A);
+      fs_save_card(card_data->data, TYPE_ISO14443A);
     }
   } else if (code == LV_EVENT_KEY) {
     if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
@@ -120,7 +120,7 @@ void hf14a_card_init(void *_view_manager, void *ctx) {
 
   uint8_t list_height = 80;
 
-  iso14a_card_select_t *card = card_data->card;
+  iso14a_card_select_t *card = card_data->data;
 
   switch (card_data->prev_view) {
   case VIEW_FILE_MANAGER:
@@ -180,8 +180,8 @@ void hf14a_card_init(void *_view_manager, void *ctx) {
 }
 
 void hf14a_card_exit() {
-  free(card_data->card);
-  card_data->card = NULL;
+  free(card_data->data);
+  card_data->data = NULL;
   free(card_data);
   card_data = NULL;
   lv_timer_del(timer);

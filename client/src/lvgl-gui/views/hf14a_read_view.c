@@ -28,8 +28,8 @@ static void read_timer(lv_timer_t *_timer) {
   set_mode_text("Waiting the card");
   iso14a_card_select_t *card = hf14a_read(keep_field, skip_RATS, ecp, magsafe);
   if (card && card->uidlen > 0) {
-    CardData *card_data = malloc(sizeof(*card_data));
-    card_data->card = card;
+    UserData *card_data = malloc(sizeof(*card_data));
+    card_data->data = card;
     card_data->prev_view = VIEW_HF14AREAD;
     lv_timer_pause(timer);
     view_manager_switch_view(view_manager, VIEW_HF14ACARD, card_data);

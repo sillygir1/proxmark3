@@ -5,7 +5,7 @@
 static lv_obj_t *list;
 static uint8_t *trace;
 static uint16_t trace_len;
-static TraceData *trace_data;
+static UserData *trace_data;
 static ViewManager *view_manager;
 
 static int trace_download() {
@@ -84,7 +84,7 @@ static int trace_draw() {
       strcat(line, buff);
     }
     char explanation[60] = {0};
-    switch (trace_data->type) {
+    switch ((CardType)trace_data->data) {
     case TYPE_ISO14443A:
       annotateIso14443a(explanation, sizeof(explanation), frame, data_len,
                         hdr->isResponse);
@@ -104,12 +104,12 @@ static int trace_draw() {
 void hf_trace_init(void *_view_manager, void *ctx) {
   view_manager = _view_manager;
   trace_data = ctx;
-  switch (trace_data->type) {
+  switch ((CardType)trace_data->data) {
   case TYPE_ISO14443A:
     set_mode_text("Trace ISO 14443-A");
     break;
   default:
-    printf("Type %d not implemented yet\n", trace_data->type);
+    printf("Type %d not implemented yet\n", (CardType)trace_data->data);
     view_manager_switch_view(view_manager, trace_data->prev_view, NULL);
     return;
   }

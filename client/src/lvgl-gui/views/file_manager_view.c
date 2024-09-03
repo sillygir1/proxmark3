@@ -19,8 +19,8 @@ static void event_handler(lv_event_t *e) {
 
     switch (fm_data->type) {
     case TYPE_ISO14443A:;
-      CardData *card_data = malloc(sizeof(*card_data));
-      card_data->card = fs_read_card(fm_data);
+      UserData *card_data = malloc(sizeof(*card_data));
+      card_data->data = fs_read_card(fm_data);
       card_data->prev_view = VIEW_FILE_MANAGER;
       view_manager_switch_view(view_manager, VIEW_HF14ACARD, card_data);
       break;

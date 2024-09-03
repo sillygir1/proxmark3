@@ -14,14 +14,9 @@ typedef enum {
 } CardType;
 
 typedef struct {
-  void *card;
+  void *data;
   uint16_t prev_view;
-} CardData;
-
-typedef struct {
-  uint16_t prev_view;
-  CardType type;
-} TraceData;
+} UserData;
 
 iso14a_card_select_t *hf14a_read(bool keep_field, bool skip_RATS, bool ecp,
                                  bool magsafe);

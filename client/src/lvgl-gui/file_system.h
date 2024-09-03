@@ -4,6 +4,7 @@
 
 #define ISO14443A_PATH "/root/pilk/uid/"
 #define ISO14443A_HEADER "ISO14443A_CARD"
+#define MFC_PATH "/root/pilk/mfc/"
 
 typedef struct {
   CardType type;

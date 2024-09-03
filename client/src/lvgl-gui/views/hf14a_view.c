@@ -29,9 +29,9 @@ static void event_handler(lv_event_t *e) {
     } else if (strcmp(button_text, menu_items[2]) == 0) {
       view_manager_switch_view(view_manager, VIEW_HF14ASNIFF, NULL);
     } else if (strcmp(button_text, menu_items[3]) == 0) {
-      TraceData *td = malloc(sizeof(*td));
+      UserData *td = malloc(sizeof(*td));
       td->prev_view = VIEW_HF14A;
-      td->type = TYPE_ISO14443A;
+      td->data = TYPE_ISO14443A;
       view_manager_switch_view(view_manager, VIEW_HFTRACE, td);
     }
   } else if (code == LV_EVENT_KEY) {
