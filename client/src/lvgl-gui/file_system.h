@@ -2,6 +2,8 @@
 #include "gui_common.h"
 #include "storage.h"
 
+#define PATH_MAXLEN 128
+
 #define DEFAULT_PATH "/root/pilk/"
 #define ISO14443A_PATH "/root/pilk/uid/"
 #define ISO14443A_EXT ".uid"
@@ -11,7 +13,7 @@
 typedef struct {
   CardType type;
   char *filename;
-  char *dir;
+  char dir[PATH_MAXLEN];
   uint16_t prev_view;
   bool leaving;
 } FileManagerData;

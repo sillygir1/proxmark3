@@ -23,7 +23,7 @@ static void event_handler(lv_event_t *e) {
     } else if (strcmp(button_text, menu_items[1]) == 0) {
       FileManagerData *fm_data = malloc(sizeof(*fm_data));
       fm_data->prev_view = VIEW_HF14A;
-      fm_data->dir = ISO14443A_PATH;
+      strcpy(fm_data->dir, ISO14443A_PATH);
       fm_data->type = TYPE_ISO14443A;
       view_manager_switch_view(view_manager, VIEW_FILE_MANAGER, fm_data);
     } else if (strcmp(button_text, menu_items[2]) == 0) {
