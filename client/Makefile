@@ -936,6 +936,7 @@ SRCS += lvgl-gui/file_system.c \
 		lvgl-gui/views/hf14a_read_view.c \
 		lvgl-gui/views/hf14a_sniff_view.c \
 		lvgl-gui/views/hf14a_view.c \
+		lvgl-gui/views/hfmf_view.c \
 		lvgl-gui/views/hf_trace_view.c \
 		lvgl-gui/views/main_menu_view.c \
 		lvgl-gui/views/view_list.c 

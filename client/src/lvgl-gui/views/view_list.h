@@ -9,7 +9,7 @@ typedef enum {
   VIEW_HF14ASIM,
   VIEW_HF14ASNIFF,
   VIEW_HFTRACE,
-  VIEW_MFC,
+  VIEW_MFC_MENU,
 
   VIEW_FILE_MANAGER,
   VIEW_COUNT, // Always last element
