@@ -78,6 +78,7 @@ static int trace_draw() {
     tracelog_hdr_t *hdr = (tracelog_hdr_t *)(trace + trace_pos);
     uint16_t data_len = hdr->data_len;
     uint8_t *frame = hdr->frame;
+    uint8_t *parityBytes = hdr->frame + data_len;
     for (uint8_t i = 0; i < data_len; i++) {
       char buff[4] = {0, 0, 0, 0};
       snprintf(buff, 4, "%02X ", frame[i]);
@@ -88,6 +89,10 @@ static int trace_draw() {
     case TYPE_ISO14443A:
       annotateIso14443a(explanation, sizeof(explanation), frame, data_len,
                         hdr->isResponse);
+      break;
+    case TYPE_MIFARECLASSIC:
+      annotateMifare(explanation, sizeof(explanation), frame, data_len,
+                     parityBytes, TRACELOG_PARITY_LEN(hdr), hdr->isResponse);
       break;
     }
 
@@ -107,6 +112,9 @@ void hf_trace_init(void *_view_manager, void *ctx) {
   switch ((CardType)trace_data->data) {
   case TYPE_ISO14443A:
     set_mode_text("Trace ISO 14443-A");
+    break;
+  case TYPE_MIFARECLASSIC:
+    set_mode_text("Trace Mifare Classic");
     break;
   default:
     printf("Type %d not implemented yet\n", (CardType)trace_data->data);
