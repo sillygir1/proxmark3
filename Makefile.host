@@ -30,6 +30,11 @@ ifeq ($(DEFSBEENHERE),)
     $(error Can't find Makefile.defs)
 endif
 
+ifeq ($(IMAGE),1)
+	CC = gcc
+	CXX = g++
+endif
+
 CFLAGS ?= $(DEFCFLAGS)
 CFLAGS += $(MYDEFS) $(MYCFLAGS) $(MYINCLUDES)
 CXXFLAGS ?= $(DEFCXXFLAGS)
