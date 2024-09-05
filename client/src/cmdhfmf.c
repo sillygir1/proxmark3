@@ -915,27 +915,12 @@ static int CmdHF14AMfDarkside(const char *Cmd) {
 
     uint64_t key = 0;
     uint64_t t1 = msclock();
-    int isOK = mfDarkside(blockno, key_type, &key);
+    int ret = mfDarkside(blockno, key_type, &key);
     t1 = msclock() - t1;
 
-    switch (isOK) {
-        case PM3_EOPABORTED:
-            PrintAndLogEx(WARNING, "button pressed or aborted via keyboard. aborted");
-            return PM3_EOPABORTED;
-        case -2 :
-            PrintAndLogEx(FAILED, "card is not vulnerable to Darkside attack (doesn't send NACK on authentication requests)");
-            return PM3_ESOFT;
-        case -3 :
-            PrintAndLogEx(FAILED, "card is not vulnerable to Darkside attack (its random number generator is not predictable)");
-            return PM3_ESOFT;
-        case -4 :
-            PrintAndLogEx(FAILED, "card is not vulnerable to Darkside attack (its random number generator seems to be based on the wellknown");
-            PrintAndLogEx(FAILED, "generating polynomial with 16 effective bits only, but shows unexpected behaviour");
-            return PM3_ESOFT;
-        default :
-            PrintAndLogEx(SUCCESS, "found valid key: "_GREEN_("%012" PRIx64), key);
-            break;
-    }
+    if (ret != PM3_SUCCESS) return ret;
+
+    PrintAndLogEx(SUCCESS, "found valid key: " _GREEN_("%012" PRIx64), key);
     PrintAndLogEx(SUCCESS, "time in darkside " _YELLOW_("%.0f") " seconds\n", (float)t1 / 1000.0);
     return PM3_SUCCESS;
 }
@@ -2907,26 +2892,15 @@ static int CmdHF14AMfAutoPWN(const char *Cmd) {
             if (verbose) {
                 PrintAndLogEx(INFO, "======================= " _YELLOW_("START DARKSIDE ATTACK") " =======================");
             }
+
+            PrintAndLogEx(NORMAL, "");
+
             isOK = mfDarkside(mfFirstBlockOfSector(sectorno), MIFARE_AUTH_KEYA + keytype, &key64);
 
-            switch (isOK) {
-                case PM3_EOPABORTED :
-                    PrintAndLogEx(WARNING, "\nButton pressed or aborted via keyboard");
-                    goto noValidKeyFound;
-                case -2 :
-                    PrintAndLogEx(FAILED, "\nCard is not vulnerable to Darkside attack (doesn't send NACK on authentication requests).");
-                    goto noValidKeyFound;
-                case -3 :
-                    PrintAndLogEx(FAILED, "\nCard is not vulnerable to Darkside attack (its random number generator is not predictable).");
-                    goto noValidKeyFound;
-                case -4 :
-                    PrintAndLogEx(FAILED, "\nCard is not vulnerable to Darkside attack (its random number generator seems to be based on the wellknown");
-                    PrintAndLogEx(FAILED, "generating polynomial with 16 effective bits only, but shows unexpected behaviour.");
-                    goto noValidKeyFound;
-                default :
-                    PrintAndLogEx(SUCCESS, "\nFound valid key [ " _GREEN_("%012" PRIx64) " ]\n", key64);
-                    break;
-            }
+            if (isOK != PM3_SUCCESS)
+                goto noValidKeyFound;
+
+            PrintAndLogEx(SUCCESS, "Found valid key [ " _GREEN_("%012" PRIx64) " ]\n", key64);
 
             // Store the keys
             num_to_bytes(key64, MIFARE_KEY_SIZE, key);
@@ -9564,15 +9538,17 @@ static int CmdHF14AMfInfo(const char *Cmd) {
     }
 
     uint8_t k08s[6] = {0xA3, 0x96, 0xEF, 0xA4, 0xE2, 0x4F};
+    uint8_t k08[6] = {0xA3, 0x16, 0x67, 0xA8, 0xCE, 0xC1};
+    uint8_t k32[6] = {0x51, 0x8B, 0x33, 0x54, 0xE7, 0x60};
     if (mfReadBlock(0, 4, k08s, blockdata) == PM3_SUCCESS) {
         PrintAndLogEx(SUCCESS, "Backdoor key..... " _YELLOW_("%s"), sprint_hex_inrow(k08s, sizeof(k08s)));
         fKeyType = MF_KEY_BD08S;
-    }
-
-    uint8_t k08[6] = {0xA3, 0x16, 0x67, 0xA8, 0xCE, 0xC1};
-    if (mfReadBlock(0, 4, k08, blockdata) == PM3_SUCCESS) {
-        PrintAndLogEx(SUCCESS, "Backdoor key..... " _YELLOW_("%02X%02X%02X%02X%02X%02X"), k08[0], k08[1], k08[2], k08[3], k08[4], k08[5]);
+    } else if (mfReadBlock(0, 4, k08, blockdata) == PM3_SUCCESS) {
+        PrintAndLogEx(SUCCESS, "Backdoor key..... " _YELLOW_("%s"), sprint_hex_inrow(k08, sizeof(k08)));
         fKeyType = MF_KEY_BD08;
+    } else if (mfReadBlock(0, 4, k32, blockdata) == PM3_SUCCESS) {
+        PrintAndLogEx(SUCCESS, "Backdoor key..... " _YELLOW_("%s"), sprint_hex_inrow(k32, sizeof(k32)));
+        fKeyType = MF_KEY_BD32;
     }
 
     if (fKeyType != 0xFF) {
@@ -9584,7 +9560,7 @@ static int CmdHF14AMfInfo(const char *Cmd) {
 
     if (fKeyType != 0xFF) {
         // cards with known backdoor
-        if (memcmp(blockdata + 8, "\x62\x63\x64\x65\x66\x67\x68\x69", 8) == 0) {
+        if (card.sak != 0x20  && memcmp(blockdata + 8, "\x62\x63\x64\x65\x66\x67\x68\x69", 8) == 0) {
             // backdoor might be present, or just a clone reusing Fudan MF data...
             PrintAndLogEx(SUCCESS, "Fudan based card");
         } else if (card.sak == 0x08 && memcmp(blockdata + 5, "\x08\x04\x00", 3) == 0
@@ -9596,6 +9572,10 @@ static int CmdHF14AMfInfo(const char *Cmd) {
         } else if (card.sak == 0x08 && memcmp(blockdata + 5, "\x08\x04\x00", 3) == 0
                    && (blockdata[8] >= 0x01 && blockdata[8] <= 0x03) && blockdata[15] == 0x1D) {
             PrintAndLogEx(SUCCESS, "Fudan FM11RF08");
+        } else if (card.sak == 0x18 && memcmp(blockdata + 5, "\x18\x02\x00\x46\x44\x53\x37\x30\x56\x30\x31", 11) == 0) {
+            PrintAndLogEx(SUCCESS, "Fudan FM11RF32");
+        } else if (card.sak == 0x20 && memcmp(blockdata + 8, "\x62\x63\x64\x65\x66\x67\x68\x69", 8) == 0) {
+            PrintAndLogEx(SUCCESS, "Fudan FM11RF32 (SAK=20)");
         } else if (card.sak == 0x28 && memcmp(blockdata + 5, "\x28\x04\x00\x90\x10\x15\x01\x00\x00\x00\x00", 11) == 0) {
             PrintAndLogEx(SUCCESS, "Fudan FM1208-10");
         } else if (card.sak == 0x88 && memcmp(blockdata + 5, "\x88\x04\x00\x43", 4) == 0) {
@@ -9604,7 +9584,7 @@ static int CmdHF14AMfInfo(const char *Cmd) {
             PrintAndLogEx(SUCCESS, "NXP MF1ICS5003");
         } else if (card.sak == 0x08 && memcmp(blockdata + 5, "\x88\x04\x00\x45", 4) == 0) {
             PrintAndLogEx(SUCCESS, "NXP MF1ICS5004");
-        } else if (fKeyType == MF_KEY_BD08 || fKeyType == MF_KEY_BD08S) {
+        } else if (fKeyType == MF_KEY_BD08 || fKeyType == MF_KEY_BD08S || fKeyType == MF_KEY_BD32) {
             PrintAndLogEx(SUCCESS, _RED_("Unknown card with backdoor, please report details!"));
         }
         // other cards
@@ -9727,7 +9707,10 @@ static int CmdHF14AMfISEN(const char *Cmd) {
         arg_lit0(NULL, "incblk2", "auth(blk)-auth(blk2)-auth(blk2+4)-..."),
         arg_lit0(NULL, "corruptnrar", "corrupt {nR}{aR}, but with correct parity"),
         arg_lit0(NULL, "corruptnrarparity", "correct {nR}{aR}, but with corrupted parity"),
-        arg_lit0(NULL, "collect_fm11rf08s", "correct all nT/{nT}/par_err of FM11RF08S in JSON. Option to be used only with -k."),
+        arg_rem("", ""),
+        arg_rem("FM11RF08S specific options:", "Incompatible with above options, except -k; output in JSON"),
+        arg_lit0(NULL, "collect_fm11rf08s", "collect all nT/{nT}/par_err."),
+        arg_lit0(NULL, "collect_fm11rf08s_with_data", "collect all nT/{nT}/par_err and data blocks."),
         arg_param_end
     };
     CLIExecWithReturn(ctx, Cmd, argtable, true);
@@ -9793,7 +9776,11 @@ static int CmdHF14AMfISEN(const char *Cmd) {
     bool incblk2 = arg_get_lit(ctx, 16);
     bool corruptnrar = arg_get_lit(ctx, 17);
     bool corruptnrarparity = arg_get_lit(ctx, 18);
-    bool collect_fm11rf08s = arg_get_lit(ctx, 19);
+    bool collect_fm11rf08s = arg_get_lit(ctx, 21);
+    bool collect_fm11rf08s_with_data = arg_get_lit(ctx, 22);
+    if (collect_fm11rf08s_with_data) {
+        collect_fm11rf08s = 1;
+    }
     CLIParserFree(ctx);
 
     uint8_t dbg_curr = DBG_NONE;
@@ -9840,26 +9827,26 @@ static int CmdHF14AMfISEN(const char *Cmd) {
     }
 
     if (collect_fm11rf08s) {
-        SendCommandNG(CMD_HF_MIFARE_ACQ_STATIC_ENCRYPTED_NONCES, key, sizeof(key));
+        uint32_t flags = collect_fm11rf08s_with_data;
+        SendCommandMIX(CMD_HF_MIFARE_ACQ_STATIC_ENCRYPTED_NONCES, flags, 0, 0, key, sizeof(key));
         if (WaitForResponseTimeout(CMD_HF_MIFARE_STATIC_ENCRYPTED_NONCE, &resp, 1000)) {
             if (resp.status == PM3_ESOFT) {
                 return NONCE_FAIL;
             }
         }
         uint8_t num_sectors = 16;
-        // TODO: get nonces and display
         PrintAndLogEx(NORMAL, "[\n  [");
         for (uint8_t sec = 0; sec < num_sectors; sec++) {
             PrintAndLogEx(NORMAL, "    [\"%08x\", \"%08x\"]%s",
-                          bytes_to_num(resp.data.asBytes + ((sec * 2) * 9), 4),
-                          bytes_to_num(resp.data.asBytes + (((sec * 2) + 1) * 9), 4),
+                          (uint32_t) bytes_to_num(resp.data.asBytes + ((sec * 2) * 9), 4),
+                          (uint32_t) bytes_to_num(resp.data.asBytes + (((sec * 2) + 1) * 9), 4),
                           sec < num_sectors - 1 ? "," : "");
         }
         PrintAndLogEx(NORMAL, "  ],\n  [");
         for (uint8_t sec = 0; sec < num_sectors; sec++) {
             PrintAndLogEx(NORMAL, "    [\"%08x\", \"%08x\"]%s",
-                          bytes_to_num(resp.data.asBytes + ((sec * 2) * 9) + 4, 4),
-                          bytes_to_num(resp.data.asBytes + (((sec * 2) + 1) * 9) + 4, 4),
+                          (uint32_t) bytes_to_num(resp.data.asBytes + ((sec * 2) * 9) + 4, 4),
+                          (uint32_t) bytes_to_num(resp.data.asBytes + (((sec * 2) + 1) * 9) + 4, 4),
                           sec < num_sectors - 1 ? "," : "");
         }
         PrintAndLogEx(NORMAL, "  ],\n  [");
@@ -9871,12 +9858,30 @@ static int CmdHF14AMfISEN(const char *Cmd) {
                           (p1 >> 3) & 1, (p1 >> 2) & 1, (p1 >> 1) & 1, p1 & 1,
                           sec < num_sectors - 1 ? "," : "");
         }
-        PrintAndLogEx(NORMAL, "  ]\n]");
+        if (collect_fm11rf08s_with_data) {
+            PrintAndLogEx(NORMAL, "  ],\n  [");
+            int bytes = num_sectors * 4 * 16;
 
-                // PrintAndLogEx(SUCCESS, "   nT: " _GREEN_("%s"), sprint_hex(resp.data.asBytes + (((sec * 2) + keyType) * 9), 4));
-                // PrintAndLogEx(SUCCESS, " {nT}: " _GREEN_("%s"), sprint_hex(resp.data.asBytes + (((sec * 2) + keyType) * 9) + 4, 4));
-                // // TODO: wrong par:
-                // PrintAndLogEx(SUCCESS, "  par: " _GREEN_("%02x"), resp.data.asBytes[(((sec * 2) + keyType) * 9) + 8]);
+            uint8_t *dump = calloc(bytes, sizeof(uint8_t));
+            if (dump == NULL) {
+                PrintAndLogEx(WARNING, "Fail, cannot allocate memory");
+                return PM3_EFAILED;
+            }
+            if (!GetFromDevice(BIG_BUF_EML, dump, bytes, 0, NULL, 0, NULL, 2500, false)) {
+                PrintAndLogEx(WARNING, "Fail, transfer from device time-out");
+                free(dump);
+                return PM3_ETIMEOUT;
+            }
+            for (uint8_t sec = 0; sec < num_sectors; sec++) {
+                for (uint8_t b = 0; b < 4; b++) {
+                    PrintAndLogEx(NORMAL, "    \"%s\"%s",
+                                  sprint_hex_inrow(dump + ((sec * 4) + b) * 16, 16),
+                                  (sec == num_sectors - 1) && (b == 3) ? "" : ",");
+                }
+            }
+            free(dump);
+        }
+        PrintAndLogEx(NORMAL, "  ]\n]");
         return PM3_SUCCESS;
     }
 
