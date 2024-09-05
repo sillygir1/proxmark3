@@ -31,9 +31,13 @@ static void event_handler(lv_event_t *e) {
       return;
     }
 
-    CardType type = fm_data->type;
+    CardType type = TYPE_NONE;
     if (fm_data->type == TYPE_NONE) {
       char *ext = storage_get_ext(fm_data->filename);
+      if (!ext) {
+        type == TYPE_NONE;
+        return;
+      }
       if (strcmp(ext, ISO14443A_EXT) == 0) {
         type = TYPE_ISO14443A;
       }
