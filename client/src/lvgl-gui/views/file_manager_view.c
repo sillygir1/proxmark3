@@ -74,12 +74,16 @@ static void update_list() {
     lv_obj_add_event_cb(btn, event_handler, LV_EVENT_KEY, view_manager);
   } else {
     for (uint8_t i = 0; i < n; i++) {
-
-      btn = lv_list_add_btn(list,
-                            storage_is_dir(fm_data->dir, arr[i])
-                                ? LV_SYMBOL_DIRECTORY
-                                : LV_SYMBOL_SAVE,
-                            arr[i]);
+      if (!storage_is_dir(fm_data->dir, arr[i]))
+        continue;
+      btn = lv_list_add_btn(list, LV_SYMBOL_DIRECTORY, arr[i]);
+      lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
+      free(arr[i]);
+    }
+    for (uint8_t i = 0; i < n; i++) {
+      if (storage_is_dir(fm_data->dir, arr[i]))
+        continue;
+      btn = lv_list_add_btn(list, LV_SYMBOL_SAVE, arr[i]);
       lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
       free(arr[i]);
     }
