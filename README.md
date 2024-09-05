@@ -12,7 +12,19 @@
 
 1. Change paths to repositories, lz4 and bzip2 in `make.sh`
 
-2. run `make.sh`
+2. run `make.sh client`
+
+## Building pm3 firmware
+
+1. Create Makefile.platform with BTADDON enabled
+
+2. Run `make.sh image`. It may ask for sudo password to install firmware to system files.
+
+## Misc
+
+- You can use `make common/install` to install scripts for flashing. It may also ask for the sudo password.
+
+- Path to built client binary: `client/proxmark3`. To copy it to the device you can use `scp -O client/proxmark3 root@*MILKVDUO_IP*:/usr/bin/proxmark3`, replace \*MILKVDUO_IP\* with your milk-v duo's ip address.
 
 Original readme is preserved below
 
