@@ -18,7 +18,7 @@
 
 typedef struct {
   bool *running;
-  Data *enc_data;
+  EncoderData *enc_data;
   lv_group_t *input_group;
   lv_obj_t *battery_icon;
   lv_obj_t *mode_label;
