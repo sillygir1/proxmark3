@@ -41,6 +41,8 @@ static void event_handler(lv_event_t *e) {
       if (strcmp(ext, ISO14443A_EXT) == 0) {
         type = TYPE_ISO14443A;
       }
+    } else {
+      type = fm_data->type;
     }
 
     switch (type) {
