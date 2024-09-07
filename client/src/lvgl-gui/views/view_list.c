@@ -1,5 +1,5 @@
 #include "view_list.h"
-#include "file_manager_view.h"
+#include "file_manager.h"
 #include "hf14a_card_view.h"
 #include "hf14a_read_view.h"
 #include "hf14a_sniff_view.h"

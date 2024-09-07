@@ -1,4 +1,5 @@
 #include "main_menu_view.h"
+#include "../file_manager_glue.h"
 #include "view_list.h"
 #include "view_manager.h"
 
@@ -26,8 +27,10 @@ static void event_handler(lv_event_t *e) {
       FileManagerData *fm_data = malloc(sizeof(*fm_data));
       fm_data->prev_view = VIEW_MAIN_MENU;
       strcpy(fm_data->dir, DEFAULT_PATH);
-      fm_data->type = TYPE_NONE;
+      fm_data->file_type = TYPE_NONE;
+      fm_data->event_handler = file_manager_event_handler;
       view_manager_switch_view(view_manager, VIEW_FILE_MANAGER, fm_data);
+      file_manager_glue(fm_data, view_manager);
     }
   } else if (code == LV_EVENT_KEY) {
     if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {

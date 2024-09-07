@@ -1,5 +1,6 @@
 #include "hfmf_view.h"
 
+#include "../file_manager_glue.h"
 #include "hf14a_view.h"
 #include "view_list.h"
 #include "view_manager.h"
@@ -28,8 +29,10 @@ static void event_handler(lv_event_t *e) {
       FileManagerData *fm_data = malloc(sizeof(*fm_data));
       fm_data->prev_view = VIEW_MFC_MENU;
       strcpy(fm_data->dir, MFC_PATH);
-      fm_data->type = TYPE_MIFARECLASSIC;
+      fm_data->file_type = TYPE_MIFARECLASSIC;
+      fm_data->event_handler = file_manager_event_handler;
       view_manager_switch_view(view_manager, VIEW_FILE_MANAGER, fm_data);
+      file_manager_glue(fm_data, view_manager);
     } else if (strcmp(button_text, menu_items[3]) == 0) {
       UserData *td = malloc(sizeof(*td));
       td->prev_view = VIEW_MFC_MENU;

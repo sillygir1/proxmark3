@@ -1,4 +1,5 @@
 #include "hf14a_view.h"
+#include "../file_manager_glue.h"
 #include "view_list.h"
 #include "view_manager.h"
 
@@ -24,8 +25,10 @@ static void event_handler(lv_event_t *e) {
       FileManagerData *fm_data = malloc(sizeof(*fm_data));
       fm_data->prev_view = VIEW_HF14A;
       strcpy(fm_data->dir, ISO14443A_PATH);
-      fm_data->type = TYPE_ISO14443A;
+      fm_data->file_type = TYPE_ISO14443A;
+      fm_data->event_handler = file_manager_event_handler;
       view_manager_switch_view(view_manager, VIEW_FILE_MANAGER, fm_data);
+      file_manager_glue(fm_data, view_manager);
     } else if (strcmp(button_text, menu_items[2]) == 0) {
       view_manager_switch_view(view_manager, VIEW_HF14ASNIFF, NULL);
     } else if (strcmp(button_text, menu_items[3]) == 0) {

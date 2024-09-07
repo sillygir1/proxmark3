@@ -16,7 +16,7 @@
 
 LVGL_DIR ?= $(PILK_SOFTWARE)/lvgl/lvgl
 
-CFLAGS += -mcpu=c906fdv -march=rv64imafdcv0p7xthead -mcmodel=medany -mabi=lp64d -DPLUGIN
+CFLAGS += -mcpu=c906fdv -march=rv64imafdcv0p7xthead -mcmodel=medany -mabi=lp64d -DPLUGIN -DFM_PLUGIN
 
 ifeq ($(PLTNAME),)
     -include ../Makefile.platform
@@ -786,7 +786,8 @@ SRCS += bucketsort.c \
 SRCS += $(PILK_SOFTWARE)/duo-encoder-kb/encoder.c \
 		$(PILK_SOFTWARE)/view-manager/view_manager.c \
 		$(PILK_SOFTWARE)/duo-battery/battery.c \
-		$(PILK_SOFTWARE)/storage/storage.c
+		$(PILK_SOFTWARE)/storage/storage.c \
+		$(PILK_SOFTWARE)/file-manager/file_manager.c
 
 # LVGL stuff
 SRCS += $(LVGL_DIR)/../lv_drivers/display/fbdev.c \
@@ -931,7 +932,7 @@ SRCS += $(LVGL_DIR)/../lv_drivers/display/fbdev.c \
 SRCS += lvgl-gui/file_system.c \
 		lvgl-gui/gui.c \
 		lvgl-gui/gui_common.c \
-		lvgl-gui/views/file_manager_view.c \
+		lvgl-gui/file_manager_glue.c \
 		lvgl-gui/views/hf14a_card_view.c \
 		lvgl-gui/views/hf14a_read_view.c \
 		lvgl-gui/views/hf14a_sniff_view.c \
