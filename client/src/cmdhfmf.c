@@ -898,17 +898,22 @@ static int CmdHF14AMfDarkside(const char *Cmd) {
         arg_param_begin,
         arg_int0(NULL, "blk", "<dec> ", "Target block"),
         arg_lit0("b", NULL, "Target key B instead of default key A"),
+        arg_int0("c", NULL, "<dec>", "Target Auth 6x"),
         arg_param_end
     };
     CLIExecWithReturn(ctx, Cmd, argtable, true);
 
-    uint8_t blockno = arg_get_u32_def(ctx, 1, 0);
-
+    uint8_t blockno = arg_get_u32_def(ctx, 1, 0) & 0xFF;
     uint8_t key_type = MIFARE_AUTH_KEYA;
 
     if (arg_get_lit(ctx, 2)) {
         PrintAndLogEx(INFO, "Targeting key B");
         key_type = MIFARE_AUTH_KEYB;
+    }
+
+    uint8_t ctype = arg_get_u32_def(ctx, 3, 0) & 0xFF;
+    if ((ctype & 0x60) == 0x60) {
+        key_type = ctype;
     }
 
     CLIParserFree(ctx);
@@ -3610,26 +3615,34 @@ static int CmdHF14AMfSmartBrute(const char *Cmd) {
 
         // generate block of keys from generator
         memset(keyBlock, 0, MIFARE_KEY_SIZE * chunksize);
+
         for (i = 0; i < chunksize; i++) {
+
             ret = bf_generate(&bctx);
+
             if (ret == BF_GENERATOR_ERROR) {
                 PrintAndLogEx(ERR, "Internal bruteforce generator error");
                 free(keyBlock);
                 free(e_sector);
                 return PM3_EFAILED;
+
             } else if (ret == BF_GENERATOR_END) {
+
                 lastChunk = true;
                 break;
+
             } else if (ret == BF_GENERATOR_NEXT) {
                 generator_key = bf_get_key48(&bctx);
                 num_to_bytes(generator_key, MIFARE_KEY_SIZE, keyBlock + (i * MIFARE_KEY_SIZE));
                 keycnt++;
 
                 if (smart_mode_stage != bctx.smart_mode_stage) {
+
                     smart_mode_stage = bctx.smart_mode_stage;
                     PrintAndLogEx(INFO, "Running bruteforce stage %d", smart_mode_stage);
 
                     if (msclock() - t1 > 0 && keys_checked > 0) {
+
                         PrintAndLogEx(INFO, "Current cracking speed (keys/s): %lu",
                                       keys_checked / ((msclock() - t1) / 1000));
 
@@ -3661,11 +3674,13 @@ out:
     uint8_t found_keys = 0;
     for (i = 0; i < sectorsCnt; ++i) {
 
-        if (e_sector[i].foundKey[0])
+        if (e_sector[i].foundKey[0]) {
             found_keys++;
+        }
 
-        if (e_sector[i].foundKey[1])
+        if (e_sector[i].foundKey[1]) {
             found_keys++;
+        }
     }
 
     if (found_keys == 0) {
@@ -6469,12 +6484,16 @@ int CmdHFMFNDEFRead(const char *Cmd) {
         res = NDEFRecordsDecodeAndPrint(data, datalen, verbose);
     }
 
-    // get total NDEF length before save. If fails, we save it all
-    size_t n = 0;
-    if (NDEFGetTotalLength(data, datalen, &n) != PM3_SUCCESS)
-        n = datalen;
+    // if given a filename, save it
+    if (fnlen) {
+        // get total NDEF length before save. If fails, we save it all
+        size_t n = 0;
+        if (NDEFGetTotalLength(data, datalen, &n) != PM3_SUCCESS) {
+            n = datalen;
+        }
 
-    pm3_save_dump(filename, data, n, jsfNDEF);
+        pm3_save_dump(filename, data, n, jsfNDEF);
+    }
 
     if (verbose == false) {
         PrintAndLogEx(HINT, "Try " _YELLOW_("`hf mf ndefread -v`") " for more details");
@@ -7564,6 +7583,14 @@ static int CmdHF14AMfWipe(const char *Cmd) {
             memcpy(mf, "\x11\x22\x33\x44\x44\x09\x04\x00\x62\x63\x64\x65\x66\x67\x68\x69", MFBLOCK_SIZE);
             break;
         }
+        case (MIFARE_1K_EV1_MAX_KEY_SIZE): {
+            PrintAndLogEx(INFO, "Loaded keys matching MIFARE Classic 1K Ev1");
+            memcpy(keyA, keys, MIFARE_1K_EV1_MAXSECTOR * MIFARE_KEY_SIZE);
+            memcpy(keyB, keys + (MIFARE_1K_EV1_MAXSECTOR * MIFARE_KEY_SIZE), (MIFARE_1K_EV1_MAXSECTOR * MIFARE_KEY_SIZE));
+            num_sectors = NumOfSectors('1');
+            memcpy(mf, "\x11\x22\x33\x44\x44\x08\x04\x00\x62\x63\x64\x65\x66\x67\x68\x69", MFBLOCK_SIZE);
+            break;
+        }
         case (MIFARE_1K_MAX_KEY_SIZE): {
             PrintAndLogEx(INFO, "Loaded keys matching MIFARE Classic 1K");
             memcpy(keyA, keys, (MIFARE_1K_MAXSECTOR * MIFARE_KEY_SIZE));
@@ -7582,7 +7609,7 @@ static int CmdHF14AMfWipe(const char *Cmd) {
             break;
         }
         default: {
-            PrintAndLogEx(INFO, "wrong key file size");
+            PrintAndLogEx(INFO, "wrong key file size.  got %zu", keyslen);
             goto out;
         }
     }
@@ -7641,12 +7668,12 @@ static int CmdHF14AMfWipe(const char *Cmd) {
                 SendCommandMIX(CMD_HF_MIFARE_WRITEBL, mfFirstBlockOfSector(s) + b, kt, 0, data, sizeof(data));
                 PacketResponseNG resp;
                 if (WaitForResponseTimeout(CMD_ACK, &resp, 1500)) {
-                    int isOK  = resp.oldarg[0];
-                    if (isOK > 0) {
-                        PrintAndLogEx(NORMAL, "( " _GREEN_("ok") " )");
+                    int8_t isOK = resp.oldarg[0];
+                    if (isOK == 1) {
+                        PrintAndLogEx(NORMAL, "- key %c ( " _GREEN_("ok") " )", (kt == MF_KEY_A) ? 'A' : 'B');
                         break;
                     } else {
-                        PrintAndLogEx(NORMAL, "( " _RED_("fail") " )");
+                        PrintAndLogEx(NORMAL, "- key %c ( " _RED_("fail") " )", (kt == MF_KEY_A) ? 'A' : 'B');
                     }
                 } else {
                     PrintAndLogEx(WARNING, "Command execute timeout");
@@ -9577,6 +9604,8 @@ static int CmdHF14AMfInfo(const char *Cmd) {
         } else if (card.sak == 0x20 && memcmp(blockdata + 8, "\x62\x63\x64\x65\x66\x67\x68\x69", 8) == 0) {
             PrintAndLogEx(SUCCESS, "Fudan FM11RF32 (SAK=20)");
         } else if (card.sak == 0x28 && memcmp(blockdata + 5, "\x28\x04\x00\x90\x10\x15\x01\x00\x00\x00\x00", 11) == 0) {
+            // Note: it also has ATS =
+            // 10 78 80 90 02 20 90 00 00 00 00 00 + UID + CRC
             PrintAndLogEx(SUCCESS, "Fudan FM1208-10");
         } else if (card.sak == 0x88 && memcmp(blockdata + 5, "\x88\x04\x00\x43", 4) == 0) {
             PrintAndLogEx(SUCCESS, "Infineon SLE66R35");
@@ -9834,7 +9863,7 @@ static int CmdHF14AMfISEN(const char *Cmd) {
                 return NONCE_FAIL;
             }
         }
-        uint8_t num_sectors = 16;
+        uint8_t num_sectors = MIFARE_1K_MAXSECTOR + 1;
         PrintAndLogEx(NORMAL, "[\n  [");
         for (uint8_t sec = 0; sec < num_sectors; sec++) {
             PrintAndLogEx(NORMAL, "    [\"%08x\", \"%08x\"]%s",
@@ -9860,7 +9889,7 @@ static int CmdHF14AMfISEN(const char *Cmd) {
         }
         if (collect_fm11rf08s_with_data) {
             PrintAndLogEx(NORMAL, "  ],\n  [");
-            int bytes = num_sectors * 4 * 16;
+            int bytes = MIFARE_1K_MAXSECTOR * 4 * 16;
 
             uint8_t *dump = calloc(bytes, sizeof(uint8_t));
             if (dump == NULL) {
@@ -9872,11 +9901,11 @@ static int CmdHF14AMfISEN(const char *Cmd) {
                 free(dump);
                 return PM3_ETIMEOUT;
             }
-            for (uint8_t sec = 0; sec < num_sectors; sec++) {
+            for (uint8_t sec = 0; sec < MIFARE_1K_MAXSECTOR; sec++) {
                 for (uint8_t b = 0; b < 4; b++) {
                     PrintAndLogEx(NORMAL, "    \"%s\"%s",
                                   sprint_hex_inrow(dump + ((sec * 4) + b) * 16, 16),
-                                  (sec == num_sectors - 1) && (b == 3) ? "" : ",");
+                                  (sec == MIFARE_1K_MAXSECTOR - 1) && (b == 3) ? "" : ",");
                 }
             }
             free(dump);

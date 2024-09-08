@@ -91,12 +91,12 @@ static uint8_t valid_nonce(uint32_t Nt, uint32_t ks1, uint8_t nt_par_enc) {
            (oddparity8((Nt >>  8) & 0xFF) == (((nt_par_enc >> 1) & 1) ^ BIT(ks1,  0)));
 }
 
-static bool search_match(NtData *pND, NtData *pND0, uint64_t key) {
+static bool search_match(const NtData *pND, const NtData *pND0, uint64_t key) {
     bool ret = 0;
     struct Crypto1State *s;
     s = crypto1_create(0);
     if (s == NULL) {
-        fprintf(stderr, "\nMalloc error in search_match!\n");
+        fprintf(stderr, "\nCalloc error in search_match!\n");
         return 0;
     }
     crypto1_init(s, key);
@@ -167,12 +167,14 @@ static void *generate_and_intersect_keys(void *threadarg) {
 
         revstate = lfsr_recovery32(ks1, nt_probe);
         if (revstate == NULL) {
-            fprintf(stderr, "\nMalloc error in generate_and_intersect_keys!\n");
+            fprintf(stderr, "\nCalloc error in generate_and_intersect_keys!\n");
             pthread_exit(NULL);
         }
+
         if (revstate_start == NULL) {
             revstate_start = revstate;
         }
+
         uint32_t keyCount0 = 0;
         while ((revstate->odd != 0x0) || (revstate->even != 0x0)) {
             lfsr_rollback_word(revstate, nt_probe, 0);
@@ -185,7 +187,7 @@ static void *generate_and_intersect_keys(void *threadarg) {
                     (*data->keyCount[nonce_index])++;
                     pthread_mutex_unlock(data->keyCount_mutex[nonce_index]);
                     if (*data->keyCount[nonce_index] == KEY_SPACE_SIZE_STEP2) {
-                        fprintf(stderr, "No space left on result_keys[%d], abort!\n", nonce_index);
+                        fprintf(stderr, "No space left on result_keys[%u], abort!\n", nonce_index);
                         i = endPos;
                         break;
                     }
@@ -193,12 +195,12 @@ static void *generate_and_intersect_keys(void *threadarg) {
             }
             revstate++;
         }
+
         free(revstate_start);
         revstate_start = NULL;
 
         pthread_mutex_lock(data->keyCount_mutex[0]);
         (*data->keyCount[0]) += keyCount0;
-        keyCount0 = 0;
         pthread_mutex_unlock(data->keyCount_mutex[0]);
     }
 
@@ -236,8 +238,10 @@ static uint64_t **unpredictable_nested(NtpKs1List *pNKL, uint32_t keyCounts[]) {
         for (int i = 0; i < NUM_THREADS; i++) {
             if (thread_status[i]) activeThreads++;
         }
+
         // Spawn new threads if there are available slots
         for (uint32_t t = 0; activeThreads < NUM_THREADS && startPos < pNKL->NtDataList[0].sizeNK && t < NUM_THREADS; t++) {
+
             if (!thread_status[t]) {
                 uint32_t endPos = startPos + chunk_size;
                 if (endPos > pNKL->NtDataList[0].sizeNK) {
@@ -249,6 +253,7 @@ static uint64_t **unpredictable_nested(NtpKs1List *pNKL, uint32_t keyCounts[]) {
                 thread_data[t].endPos = endPos;
                 thread_data[t].thread_id = t;
                 thread_data[t].num_nonces = pNKL->nr_nonces;
+
                 for (uint32_t i = 0; i < MAX_NR_NONCES; i++) {
                     thread_data[t].result_keys[i] = result_keys[i];
                     thread_data[t].keyCount[i] = &keyCounts[i];
@@ -273,9 +278,9 @@ static uint64_t **unpredictable_nested(NtpKs1List *pNKL, uint32_t keyCounts[]) {
 
         pthread_mutex_unlock(&status_mutex);
         printf("\33[2K\rProgress: %02.1f%%", (double)(startPos + 1) * 100 / pNKL->NtDataList[0].sizeNK);
-        printf(" keys[%d]:%9i", 0, keyCounts[0]);
+        printf(" keys[%d]:%9u", 0, keyCounts[0]);
         for (uint32_t nonce_index = 1; nonce_index < pNKL->nr_nonces; nonce_index++) {
-            printf(" keys[%d]:%5i", nonce_index, keyCounts[nonce_index]);
+            printf(" keys[%u]:%5u", nonce_index, keyCounts[nonce_index]);
         }
         fflush(stdout);
     }
@@ -287,6 +292,7 @@ static uint64_t **unpredictable_nested(NtpKs1List *pNKL, uint32_t keyCounts[]) {
     for (int i = 0; i < NUM_THREADS; i++) {
         if (thread_status[i]) activeThreads++;
     }
+
     while (activeThreads) {
         pthread_cond_wait(&status_cond, &status_mutex);
         activeThreads = 0;
@@ -317,10 +323,10 @@ static void analyze_keys(uint64_t **keys, uint32_t keyCounts[MAX_NR_NONCES], uin
     printf("Analyzing keys...\n");
     for (uint32_t i = 0; i < nr_nonces; i++) {
         if (i == 0) {
-            printf("nT(%i): %i key candidates\n", i, keyCounts[i]);
+            printf("nT(%u): %u key candidates\n", i, keyCounts[i]);
             continue;
         } else {
-            printf("nT(%i): %i key candidates matching nT(0)\n", i, keyCounts[i]);
+            printf("nT(%u): %u key candidates matching nT(0)\n", i, keyCounts[i]);
         }
         for (uint32_t j = 0; j < keyCounts[i]; j++) {
             uint64_t key = keys[i][j];
@@ -343,12 +349,15 @@ static void analyze_keys(uint64_t **keys, uint32_t keyCounts[MAX_NR_NONCES], uin
     }
 
     for (uint32_t i = 0; i < combined_length; i++) {
+
         if (combined_counts[i] > 1) {
             printf("Key %012" PRIx64 " found in %d arrays: 0", combined_keys[i], combined_counts[i] + 1);
+
             for (uint32_t ii = 1; ii < nr_nonces; ii++) {
                 for (uint32_t j = 0; j < keyCounts[ii]; j++) {
+
                     if (combined_keys[i] == keys[ii][j]) {
-                        printf(", %2i", ii);
+                        printf(", %2u", ii);
                     }
                 }
             }
@@ -358,6 +367,7 @@ static void analyze_keys(uint64_t **keys, uint32_t keyCounts[MAX_NR_NONCES], uin
 }
 
 int main(int argc, char *const argv[]) {
+
     if (argc < 2) {
         int cmdlen = strlen(argv[0]);
         printf("Usage:\n  %s <uid1> <nt_enc1> <nt_par_err1> <uid2> <nt_enc2> <nt_par_err2> ...\n", argv[0]);
@@ -370,10 +380,12 @@ int main(int argc, char *const argv[]) {
         printf("  %*s                   +nt_par_err1    +nt_par_err2           +nt_par_err3\n", cmdlen, "");
         return 1;
     }
+
     if (argc < 1 + 2 * 3) {
         fprintf(stderr, "Too few nonces, abort. Need 2 nonces min.\n");
         return 1;
     }
+
     if (argc > 1 + MAX_NR_NONCES * 3) {
         fprintf(stderr, "Too many nonces, abort. Choose max %i nonces.\n", MAX_NR_NONCES);
         return 1;
@@ -384,29 +396,37 @@ int main(int argc, char *const argv[]) {
     uint32_t keyCounts[MAX_NR_NONCES] = {0};
 
     uint32_t authuid = hex_to_uint32(argv[1]);
+
     // process all args.
     printf("Generating nonce candidates...\n");
+
     for (uint32_t i = 1; i < argc; i += 3) {
+
         // uid + ntEnc + parEnc
         if (strcmp(argv[i], ".") != 0) {
             authuid = hex_to_uint32(argv[i]);
         }
+
         uint32_t nt_enc = hex_to_uint32(argv[i + 1]);
         uint8_t nt_par_err_arr[4];
         if (bin_to_uint8_arr(argv[i + 2], nt_par_err_arr, 4)) {
             return 1;
         }
+
         uint8_t nt_par_enc = ((nt_par_err_arr[0] ^ oddparity8((nt_enc >> 24) & 0xFF)) << 3) |
                              ((nt_par_err_arr[1] ^ oddparity8((nt_enc >> 16) & 0xFF)) << 2) |
                              ((nt_par_err_arr[2] ^ oddparity8((nt_enc >>  8) & 0xFF)) << 1) |
                              ((nt_par_err_arr[3] ^ oddparity8((nt_enc >>  0) & 0xFF)) << 0);
+
         NtData *pNtData = &NKL.NtDataList[NKL.nr_nonces];
+
         // Try to recover the keystream1
         uint32_t nttest = prng_successor(1, 16); // a first valid nonce
         pNtData->pNK = (NtpKs1 *)calloc(8192, sizeof(NtpKs1)); // 2**16 filtered with 3 parity bits => 2**13
         if (pNtData->pNK == NULL) {
             return 1;
         }
+
         uint32_t j = 0;
         for (uint16_t m = 1; m; m++) {
             uint32_t ks1 = nt_enc ^ nttest;
@@ -417,10 +437,19 @@ int main(int argc, char *const argv[]) {
             }
             nttest = prng_successor(nttest, 1);
         }
-        printf("uid=%08x nt_enc=%08x nt_par_err=%i%i%i%i nt_par_enc=%i%i%i%i %i/%i: %d\n", authuid, nt_enc,
-               nt_par_err_arr[0], nt_par_err_arr[1], nt_par_err_arr[2], nt_par_err_arr[3],
-               (nt_par_enc >> 3) & 1, (nt_par_enc >> 2) & 1, (nt_par_enc >> 1) & 1, nt_par_enc & 1,
-               NKL.nr_nonces + 1, (argc - 1) / 3, j);
+
+        printf("uid=%08x nt_enc=%08x nt_par_err=%i%i%i%i nt_par_enc=%i%i%i%i %u/%i: %u\n"
+               , authuid
+               , nt_enc
+               , nt_par_err_arr[0], nt_par_err_arr[1], nt_par_err_arr[2], nt_par_err_arr[3]
+               , (nt_par_enc >> 3) & 1
+               , (nt_par_enc >> 2) & 1
+               , (nt_par_enc >> 1) & 1
+               , nt_par_enc & 1
+               , NKL.nr_nonces + 1
+               , (argc - 1) / 3
+               , j
+              );
 
         pNtData->authuid = authuid;
         pNtData->sizeNK = j;
@@ -431,12 +460,15 @@ int main(int argc, char *const argv[]) {
 
     printf("Finding key candidates...\n");
     keys = unpredictable_nested(&NKL, keyCounts);
+
     printf("\n\nFinding phase complete.\n");
 
-    for (uint32_t k = 0; k < NKL.nr_nonces; k++)
+    for (uint32_t k = 0; k < NKL.nr_nonces; k++) {
         free(NKL.NtDataList[k].pNK);
+    }
 
     analyze_keys(keys, keyCounts, NKL.nr_nonces);
+
     FILE *fptr;
     // opening the file in read mode
     fptr = fopen("keys.dic", "w");
@@ -452,11 +484,13 @@ int main(int argc, char *const argv[]) {
     } else {
         fprintf(stderr, "Warning: Cannot save keys in keys.dic\n");
     }
+
     for (uint32_t i = 1; i < NKL.nr_nonces; i++) {
         if (keys[i] != NULL) {
             free(keys[i]);
         }
     }
+
     if (keys != NULL) {
         free(keys);
     }

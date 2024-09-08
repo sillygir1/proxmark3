@@ -51,9 +51,10 @@ static int bin_to_uint8_arr(const char *bin_str, uint8_t bit_arr[], uint8_t arr_
 }
 
 static uint64_t *generate_keys(uint64_t authuid, uint32_t nt, uint32_t nt_enc, uint32_t nt_par_enc, uint32_t *keyCount) {
-    uint64_t *result_keys = (uint64_t *)malloc(KEY_SPACE_SIZE * sizeof(uint64_t));
+
+    uint64_t *result_keys = (uint64_t *)calloc(1, KEY_SPACE_SIZE * sizeof(uint64_t));
     if (result_keys == NULL) {
-        fprintf(stderr, "\nMalloc error in generate_and_intersect_keys!\n");
+        fprintf(stderr, "\nCalloc error in generate_and_intersect_keys!\n");
         return NULL;
     }
 
@@ -63,20 +64,21 @@ static uint64_t *generate_keys(uint64_t authuid, uint32_t nt, uint32_t nt_enc, u
 
     revstate = lfsr_recovery32(ks1, nt ^ authuid);
     if (revstate == NULL) {
-        fprintf(stderr, "\nMalloc error in generate_keys!\n");
+        fprintf(stderr, "\nCalloc error in generate_keys!\n");
         free(result_keys);
         return NULL;
     }
-    if (revstate_start == NULL) {
-        revstate_start = revstate;
-    }
+
+    revstate_start = revstate;
+
     s = crypto1_create(0);
     if (s == NULL) {
-        fprintf(stderr, "\nMalloc error in generate_keys!\n");
+        fprintf(stderr, "\nCalloc error in generate_keys!\n");
         free(result_keys);
         crypto1_destroy(revstate_start);
         return 0;
     }
+
     while ((revstate->odd != 0x0) || (revstate->even != 0x0)) {
         lfsr_rollback_word(revstate, nt ^ authuid, 0);
         crypto1_get_lfsr(revstate, &lfsr);
@@ -99,6 +101,7 @@ static uint64_t *generate_keys(uint64_t authuid, uint32_t nt, uint32_t nt_enc, u
         }
         revstate++;
     }
+
     crypto1_destroy(s);
     crypto1_destroy(revstate_start);
     revstate_start = NULL;
@@ -106,6 +109,7 @@ static uint64_t *generate_keys(uint64_t authuid, uint32_t nt, uint32_t nt_enc, u
 }
 
 int main(int argc, char *const argv[]) {
+
     if (argc != 6) {
         int cmdlen = strlen(argv[0]);
         printf("Usage:\n  %s <uid:hex> <sector:dec> <nt:hex> <nt_enc:hex> <nt_par_err:bin>\n"
@@ -117,6 +121,7 @@ int main(int argc, char *const argv[]) {
                argv[0], cmdlen, argv[0], cmdlen, "");
         return 1;
     }
+
     uint64_t *keys = NULL;
     uint32_t keyCount = 0;
 
@@ -124,27 +129,41 @@ int main(int argc, char *const argv[]) {
     uint32_t sector = atoi(argv[2]);
     uint32_t nt = hex_to_uint32(argv[3]);
     uint32_t nt_enc = hex_to_uint32(argv[4]);
+
     uint8_t nt_par_err_arr[4];
     if (bin_to_uint8_arr(argv[5], nt_par_err_arr, 4)) {
         return 1;
     }
+
     uint8_t nt_par_enc = ((nt_par_err_arr[0] ^ oddparity8((nt_enc >> 24) & 0xFF)) << 3) |
                          ((nt_par_err_arr[1] ^ oddparity8((nt_enc >> 16) & 0xFF)) << 2) |
                          ((nt_par_err_arr[2] ^ oddparity8((nt_enc >>  8) & 0xFF)) << 1) |
                          ((nt_par_err_arr[3] ^ oddparity8((nt_enc >>  0) & 0xFF)) << 0);
-    printf("uid=%08x nt=%08x nt_enc=%08x nt_par_err=%i%i%i%i nt_par_enc=%i%i%i%i ks1=%08x\n", authuid, nt, nt_enc,
-           nt_par_err_arr[0], nt_par_err_arr[1], nt_par_err_arr[2], nt_par_err_arr[3],
-           (nt_par_enc >> 3) & 1, (nt_par_enc >> 2) & 1, (nt_par_enc >> 1) & 1, nt_par_enc & 1,
-           nt ^ nt_enc);
+
+    printf("uid=%08x nt=%08x nt_enc=%08x nt_par_err=%u%u%u%u nt_par_enc=%u%u%u%u ks1=%08x\n"
+           , authuid
+           , nt
+           , nt_enc
+           , nt_par_err_arr[0]
+           , nt_par_err_arr[1]
+           , nt_par_err_arr[2]
+           , nt_par_err_arr[3]
+           , (nt_par_enc >> 3) & 1
+           , (nt_par_enc >> 2) & 1
+           , (nt_par_enc >> 1) & 1
+           , nt_par_enc & 1
+           , nt ^ nt_enc
+          );
 
 
     printf("Finding key candidates...\n");
     keys = generate_keys(authuid, nt, nt_enc, nt_par_enc, &keyCount);
-    printf("Finding phase complete, found %i keys\n", keyCount);
+
+    printf("Finding phase complete, found %u keys\n", keyCount);
 
     FILE *fptr;
     char filename[30];
-    snprintf(filename, sizeof(filename), "keys_%08x_%02i_%08x.dic", authuid, sector, nt);
+    snprintf(filename, sizeof(filename), "keys_%08x_%02u_%08x.dic", authuid, sector, nt);
 
     fptr = fopen(filename, "w");
     if (fptr != NULL) {
@@ -157,6 +176,7 @@ int main(int argc, char *const argv[]) {
     } else {
         fprintf(stderr, "Warning: Cannot save keys in %s\n", filename);
     }
+
     if (keys != NULL) {
         free(keys);
     }

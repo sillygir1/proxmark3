@@ -304,7 +304,7 @@ static bool MifareSimInit(uint16_t flags, uint8_t *datain, uint16_t atqa, uint8_
         }
 
         // Correct uid size bits in ATQA
-        rATQA[0] = (rATQA[0] & 0x3f) | 0x00; // single size uid
+        rATQA[0] = (rATQA[0] & 0x3f); // single size uid
 
     } else if ((flags & FLAG_7B_UID_IN_DATA) == FLAG_7B_UID_IN_DATA) {
         memcpy(&rUIDBCC1[1], datain, 3);
@@ -1076,7 +1076,7 @@ void Mifare1ksim(uint16_t flags, uint8_t exitAfterNReads, uint8_t *datain, uint1
                 }
 
                 // case MFEMUL_WORK => CMD RATS
-                if (receivedCmd_len == 4 && receivedCmd_dec[0] == ISO14443A_CMD_RATS && receivedCmd_dec[1] == 0x80) {
+                if (receivedCmd_len == 4 && receivedCmd_dec[0] == ISO14443A_CMD_RATS && (receivedCmd_dec[1] & 0xF0) <= 0x80 && (receivedCmd_dec[1] & 0x0F) <= 0x0e) {
                     if (rats && rats_len) {
                         if (encrypted_data) {
                             memcpy(response, rats, rats_len);
