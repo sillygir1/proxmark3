@@ -15,9 +15,9 @@ bool magsafe;
 bool skip_RATS;
 bool reading;
 
-#define OPTIONS_NUM 5
-static const char *options[OPTIONS_NUM] = {"Read", "Leave field ON", "Use ECP",
-                                           "Magsafe", "Skip RATS"};
+#define OPTIONS_NUM 6
+static const char *options[OPTIONS_NUM] = {
+    "Read", "Leave field ON", "Use ECP", "Magsafe", "Skip RATS", "Back"};
 
 static void read_timer(lv_timer_t *_timer) {
   if (!reading) {
@@ -44,13 +44,17 @@ static void event_handler(lv_event_t *e) {
   if (code == LV_EVENT_CLICKED) {
     const char *button_text = lv_list_get_btn_text(list, obj);
     lv_obj_t *chb;
-    if (strcmp(button_text, options[0]) == 0) {
+    if (strcmp(button_text, "Read") == 0) {
       if (!reading) {
         reading = true;
         lv_timer_resume(timer);
       } else {
         reading = false;
       }
+    } else if (strcmp(button_text, "Back") == 0) {
+      if (reading)
+        reading = false;
+      view_manager_switch_view(view_manager, VIEW_HF14A, NULL);
     } else {
       chb = lv_obj_get_child(obj, -1);
       if (lv_obj_has_state(chb, LV_STATE_CHECKED)) {
@@ -58,9 +62,9 @@ static void event_handler(lv_event_t *e) {
       } else {
         lv_obj_add_state(chb, LV_STATE_CHECKED);
       }
-      if (strcmp(button_text, options[1]) == 0)
+      if (strcmp(button_text, "Leave field ON") == 0)
         keep_field = lv_obj_has_state(chb, LV_STATE_CHECKED);
-      else if (strcmp(button_text, options[2]) == 0)
+      else if (strcmp(button_text, "Use ECP") == 0)
         ecp = lv_obj_has_state(chb, LV_STATE_CHECKED);
       else if (strcmp(button_text, options[3]) == 0)
         magsafe = lv_obj_has_state(chb, LV_STATE_CHECKED);
@@ -87,7 +91,7 @@ void hf14a_read_init(void *_view_manager, void *ctx) {
   lv_obj_set_size(list, 240, 295);
 
   lv_obj_t *btn;
-  for (uint8_t i = 0; i < OPTIONS_NUM; i++) {
+  for (uint8_t i = 0; i < OPTIONS_NUM - 1; i++) {
     btn = lv_list_add_btn(list, LV_SYMBOL_LIST, options[i]);
     lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
     if (i == 0)
@@ -97,6 +101,8 @@ void hf14a_read_init(void *_view_manager, void *ctx) {
     lv_checkbox_set_text(chb, "");
     lv_obj_align(chb, LV_ALIGN_RIGHT_MID, 0, 0);
   }
+  btn = lv_list_add_btn(list, LV_SYMBOL_LIST, "Back");
+  lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
 }
 
 void hf14a_read_exit() {

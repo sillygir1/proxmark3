@@ -89,22 +89,20 @@ static void event_handler(lv_event_t *e) {
   if (code == LV_EVENT_CLICKED) {
     const char *button_text = lv_list_get_btn_text(list, obj);
     lv_obj_t *chb;
-    if (strcmp(button_text, "Simulate") == 0) {
-      // Simulate
-      if (!simulating) {
-        simulating = true;
-        simulate_uid();
-      }
+    if (strcmp(button_text, "Simulate") == 0 && !simulating) {
+      simulating = true;
+      simulate_uid();
     } else if (strcmp(button_text, "Save") == 0) {
-      // Save
       fs_save_card(card_data->data, TYPE_ISO14443A);
+    } else if (strcmp(button_text, "Back") == 0) {
+      goto leave;
     }
-  } else if (code == LV_EVENT_KEY) {
-    if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
-      if (simulating)
-        SendCommandNG(CMD_BREAK_LOOP, NULL, 0);
-      view_manager_switch_view(view_manager, card_data->prev_view, NULL);
-    }
+  } else if (code == LV_EVENT_KEY &&
+             lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
+  leave:
+    if (simulating)
+      SendCommandNG(CMD_BREAK_LOOP, NULL, 0);
+    view_manager_switch_view(view_manager, card_data->prev_view, NULL);
   }
 }
 
@@ -118,16 +116,16 @@ void hf14a_card_init(void *_view_manager, void *ctx) {
   if (!card_data)
     card_data = ctx;
 
-  uint8_t list_height = 80;
+  uint8_t list_height = 110;
 
   iso14a_card_select_t *card = card_data->data;
 
   switch (card_data->prev_view) {
   case VIEW_FILE_MANAGER:
-    list_height = 40;
+    list_height = 70;
     break;
   case VIEW_HF14AREAD:
-    list_height = 80;
+    list_height = 110;
     break;
   default:
     printf("Something's wrong, exiting...");
@@ -147,6 +145,8 @@ void hf14a_card_init(void *_view_manager, void *ctx) {
     lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
   }
   btn = lv_list_add_btn(list, LV_SYMBOL_LIST, "Simulate");
+  lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
+  btn = lv_list_add_btn(list, LV_SYMBOL_BACKSPACE, "Back");
   lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
 
   label = lv_label_create(view_manager->obj_parent);

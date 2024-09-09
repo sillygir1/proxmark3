@@ -5,11 +5,12 @@
 
 static lv_obj_t *list;
 
-#define ITEMS_NUM 4
+#define ITEMS_NUM 5
 static const char *menu_items[ITEMS_NUM] = {"Read tag", "Saved tags", "Sniff",
-                                            "Trace"};
+                                            "Trace", "Back"};
 static const char *menu_icons[ITEMS_NUM] = {LV_SYMBOL_FILE, LV_SYMBOL_DIRECTORY,
-                                            LV_SYMBOL_EYE_OPEN, LV_SYMBOL_LIST};
+                                            LV_SYMBOL_EYE_OPEN, LV_SYMBOL_LIST,
+                                            LV_SYMBOL_BACKSPACE};
 
 static void event_handler(lv_event_t *e) {
   lv_event_code_t code = lv_event_get_code(e);
@@ -19,9 +20,9 @@ static void event_handler(lv_event_t *e) {
   if (code == LV_EVENT_CLICKED) {
     const char *button_text = lv_list_get_btn_text(list, obj);
     // printf("%s\n", button_text);
-    if (strcmp(button_text, menu_items[0]) == 0) {
+    if (strcmp(button_text, "Read tag") == 0) {
       view_manager_switch_view(view_manager, VIEW_HF14AREAD, NULL);
-    } else if (strcmp(button_text, menu_items[1]) == 0) {
+    } else if (strcmp(button_text, "Saved tags") == 0) {
       FileManagerData *fm_data = malloc(sizeof(*fm_data));
       fm_data->prev_view = VIEW_HF14A;
       strcpy(fm_data->dir, ISO14443A_PATH);
@@ -29,13 +30,15 @@ static void event_handler(lv_event_t *e) {
       fm_data->event_handler = file_manager_event_handler;
       view_manager_switch_view(view_manager, VIEW_FILE_MANAGER, fm_data);
       file_manager_glue(fm_data, view_manager);
-    } else if (strcmp(button_text, menu_items[2]) == 0) {
+    } else if (strcmp(button_text, "Sniff") == 0) {
       view_manager_switch_view(view_manager, VIEW_HF14ASNIFF, NULL);
-    } else if (strcmp(button_text, menu_items[3]) == 0) {
+    } else if (strcmp(button_text, "Trace") == 0) {
       UserData *td = malloc(sizeof(*td));
       td->prev_view = VIEW_HF14A;
       td->data = TYPE_ISO14443A;
       view_manager_switch_view(view_manager, VIEW_HFTRACE, td);
+    } else if (strcmp(button_text, "Back") == 0) {
+      view_manager_switch_view(view_manager, VIEW_MAIN_MENU, NULL);
     }
   } else if (code == LV_EVENT_KEY) {
     if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {

@@ -11,9 +11,9 @@ static bool opt_card;
 static bool opt_reader;
 static bool sniffing;
 
-#define OPTIONS_NUM 4
+#define OPTIONS_NUM 5
 static const char *options[OPTIONS_NUM] = {"Sniff", "Trigger", "Card",
-                                           "Reader 7-bit cmd"};
+                                           "Reader 7-bit cmd", "Back"};
 
 static void sniff_timer(lv_timer_t *_timer) {
   uint8_t param = (opt_card * 0x01) | (opt_reader * 0x02);
@@ -37,12 +37,14 @@ static void event_handler(lv_event_t *e) {
   if (code == LV_EVENT_CLICKED) {
     const char *button_text = lv_list_get_btn_text(list, obj);
     lv_obj_t *chb;
-    if (strcmp(button_text, options[0]) == 0) {
+    if (strcmp(button_text, "Sniff") == 0) {
       if (sniffing)
         return;
       set_mode_text("Sniffing in process");
       sniffing = true;
       lv_timer_resume(timer);
+    } else if (strcmp(button_text, "Back") == 0) {
+      view_manager_switch_view(view_manager, VIEW_HF14A, NULL);
     } else {
       chb = lv_obj_get_child(obj, -1);
       if (lv_obj_has_state(chb, LV_STATE_CHECKED)) {
@@ -50,15 +52,14 @@ static void event_handler(lv_event_t *e) {
       } else {
         lv_obj_add_state(chb, LV_STATE_CHECKED);
       }
-      if (strcmp(button_text, options[1]) == 0)
+      if (strcmp(button_text, "Card") == 0)
         opt_card = lv_obj_has_state(chb, LV_STATE_CHECKED);
-      else if (strcmp(button_text, options[2]) == 0)
+      else if (strcmp(button_text, "Reader 7-bit cmd") == 0)
         opt_reader = lv_obj_has_state(chb, LV_STATE_CHECKED);
     }
-  } else if (code == LV_EVENT_KEY) {
-    if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
-      view_manager_switch_view(view_manager, VIEW_HF14A, NULL);
-    }
+  } else if (code == LV_EVENT_KEY &&
+             lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
+    view_manager_switch_view(view_manager, VIEW_HF14A, NULL);
   }
 }
 
@@ -78,7 +79,7 @@ void hf14a_sniff_init(void *_view_manager, void *ctx) {
   btn = lv_list_add_btn(list, LV_SYMBOL_LIST, options[0]);
   lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
   lv_list_add_text(list, options[1]);
-  for (uint8_t i = 2; i < OPTIONS_NUM; i++) {
+  for (uint8_t i = 2; i < OPTIONS_NUM - 1; i++) {
     btn = lv_list_add_btn(list, LV_SYMBOL_LIST, options[i]);
     lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
     lv_obj_t *chb = lv_checkbox_create(btn);
@@ -86,6 +87,8 @@ void hf14a_sniff_init(void *_view_manager, void *ctx) {
     lv_checkbox_set_text(chb, "");
     lv_obj_align(chb, LV_ALIGN_RIGHT_MID, 0, 0);
   }
+  btn = lv_list_add_btn(list, LV_SYMBOL_BACKSPACE, "Back");
+  lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
 }
 
 void hf14a_sniff_exit() {

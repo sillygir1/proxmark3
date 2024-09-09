@@ -49,16 +49,16 @@ static int trace_download() {
 static void event_handler(lv_event_t *e) {
   lv_event_code_t code = lv_event_get_code(e);
   lv_obj_t *obj = lv_event_get_target(e);
-  ViewManager *view_manager = lv_event_get_user_data(e);
 
   if (code == LV_EVENT_CLICKED) {
     const char *button_text = lv_list_get_btn_text(list, obj);
     // printf("%s\n", button_text);
-
-  } else if (code == LV_EVENT_KEY) {
-    if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
+    if (strcmp(button_text, "Back") == 0) {
       view_manager_switch_view(view_manager, trace_data->prev_view, NULL);
     }
+  } else if (code == LV_EVENT_KEY &&
+             lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
+    view_manager_switch_view(view_manager, trace_data->prev_view, NULL);
   }
 }
 
@@ -67,6 +67,9 @@ static int trace_draw() {
   uint16_t trace_pos = 0;
   char line[512];
   lv_obj_t *btn;
+
+  btn = lv_list_add_btn(list, LV_SYMBOL_BACKSPACE, "Back");
+  lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
 
   memset(line, 0, 512);
   snprintf(line, 32, "Trace length: %u", trace_len);
