@@ -10,7 +10,10 @@ void file_manager_event_handler(lv_event_t *e) {
 
   if (code == LV_EVENT_CLICKED) {
     const char *button_text = lv_list_get_btn_text(list, obj);
-    printf("%s\n", button_text);
+    // printf("%s\n", button_text);
+    if (strcmp(button_text, "Back") == 0) {
+      goto leave;
+    }
     fm_data->filename = button_text;
 
     if (strcmp(fm_data->filename, "..") == 0) {
@@ -53,11 +56,11 @@ void file_manager_event_handler(lv_event_t *e) {
       // Do something idk
       break;
     }
-  } else if (code == LV_EVENT_KEY) {
-    if (lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
-      fm_data->leaving = true;
-      view_manager_switch_view(view_manager, fm_data->prev_view, NULL);
-    }
+  } else if (code == LV_EVENT_KEY &&
+             lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
+  leave:
+    fm_data->leaving = true;
+    view_manager_switch_view(view_manager, fm_data->prev_view, NULL);
   }
 }
 
