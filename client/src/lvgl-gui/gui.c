@@ -208,6 +208,8 @@ void gui_loop() {
     nanosleep(&req, &rem);
   }
   printf("Exiting...\n");
+  lv_obj_clean(lv_scr_act());
+  lv_timer_handler();
   encoder_release(proxmark_data->enc_data);
   lv_timer_del(battery_timer);
   view_manager_free(proxmark_data->view_manager);
