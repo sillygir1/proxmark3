@@ -1,5 +1,5 @@
 #include "file_system.h"
-#include "gui_common.h"
+#include "nfc_common.h"
 
 void *fs_read_card(FileManagerData *fm_data) {
   if (!fm_data)

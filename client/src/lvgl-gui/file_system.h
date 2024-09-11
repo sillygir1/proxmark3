@@ -1,7 +1,7 @@
 #pragma once
 
 #include "file_manager.h"
-#include "gui_common.h"
+#include "nfc_common.h"
 #include "storage.h"
 
 #define PATH_MAXLEN 128

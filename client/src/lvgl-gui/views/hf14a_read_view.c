@@ -1,7 +1,7 @@
 #include "hf14a_read_view.h"
 #include "../../cmdhf14a.h"
 #include "../../comms.h"
-#include "../gui_common.h"
+#include "../nfc_common.h"
 #include "view_list.h"
 #include "view_manager.h"
 #include <mifare.h>

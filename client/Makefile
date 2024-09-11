@@ -931,8 +931,8 @@ SRCS += $(LVGL_DIR)/../lv_drivers/display/fbdev.c \
 # LVGL gui files
 SRCS += lvgl-gui/file_system.c \
 		lvgl-gui/gui.c \
-		lvgl-gui/gui_common.c \
 		lvgl-gui/file_manager_glue.c \
+		lvgl-gui/nfc_common.c \
 		lvgl-gui/views/hf14a_card_view.c \
 		lvgl-gui/views/hf14a_read_view.c \
 		lvgl-gui/views/hf14a_sniff_view.c \

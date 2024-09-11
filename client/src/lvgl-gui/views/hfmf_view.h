@@ -1,5 +1,5 @@
 #include "../gui.h"
-#include "../gui_common.h"
+#include "../nfc_common.h"
 
 void hfmf_init(void *_view_manager, void *ctx);
 

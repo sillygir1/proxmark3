@@ -2,7 +2,7 @@
 
 #include "file_manager.h"
 #include "file_system.h"
-#include "gui_common.h"
+#include "nfc_common.h"
 #include "view_manager.h"
 #include "views/view_list.h"
 

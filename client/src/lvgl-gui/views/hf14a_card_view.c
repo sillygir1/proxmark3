@@ -1,7 +1,7 @@
 #include "../../cmdhf14a.h"
 #include "../../comms.h"
 #include "../file_system.h"
-#include "../gui_common.h"
+#include "../nfc_common.h"
 #include "hf14a_read_view.h"
 #include "storage.h"
 #include "view_list.h"

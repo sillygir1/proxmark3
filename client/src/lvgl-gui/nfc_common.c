@@ -1,4 +1,4 @@
-#include "gui_common.h"
+#include "nfc_common.h"
 
 iso14a_card_select_t *hf14a_read(bool keep_field, bool skip_RATS, bool ecp,
                                  bool magsafe) {
