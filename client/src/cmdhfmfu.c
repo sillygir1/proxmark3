@@ -82,6 +82,7 @@ static uint8_t default_3des_keys[][16] = {
 static uint8_t default_pwd_pack[][4] = {
     {0xFF, 0xFF, 0xFF, 0xFF}, // PACK 0x00,0x00 -- factory default
     {0x4E, 0x45, 0x78, 0x54}, // NExT
+    {0xB6, 0xAA, 0x55, 0x8D}, // copykey
 };
 
 static uint64_t UL_TYPES_ARRAY[] = {
@@ -164,6 +165,7 @@ static const ul_family_t ul_family[] = {
     {"NTAG 210u", "NT2H1001G0DUx", "\x00\x04\x04\x02\x02\x00\x0B\x03"},
     {"UL EV1 128", "Mikron JSC Russia EV1", "\x00\x34\x21\x01\x01\x00\x0E\x03"},
     {"NTAG 213", "Shanghai Feiju NTAG", "\x00\x53\x04\x02\x01\x00\x0F\x03"},
+    {"NTAG 215", "Shanghai Feiju NTAG", "\x00\x05\x34\x02\x01\x00\x11\x03"},
     {"UL AES", "MF0AES2001DUD", "\x00\x04\x03\x01\x04\x00\x0F\x03"},
 };
 
@@ -877,7 +879,7 @@ static int ndef_print_CC(uint8_t *data) {
 
     PrintAndLogEx(NORMAL, "");
     PrintAndLogEx(INFO, "--- " _CYAN_("NDEF Message"));
-    PrintAndLogEx(SUCCESS, "Capability Container: %s", sprint_hex(data, 4));
+    PrintAndLogEx(SUCCESS, "Capability Container: " _YELLOW_("%s"), sprint_hex_inrow(data, 4));
     PrintAndLogEx(SUCCESS, "  %02X: NDEF Magic Number", data[0]);
 
 //    PrintAndLogEx(SUCCESS, "  %02X : version %d.%d supported by tag", data[1], (data[1] & 0xF0) >> 4, data[1] & 0x0F);
@@ -1016,7 +1018,7 @@ int ul_print_type(uint64_t tagtype, uint8_t spaces) {
     tagtype &= ~(MFU_TT_MAGIC);
 
     if (ismagic) {
-        snprintf(typestr + strlen(typestr), 4, " (");
+        snprintf(typestr + strlen(typestr), 4, " ( ");
     }
 
     snprintf(typestr + strlen(typestr), sizeof(typestr) - strlen(typestr), "%s", ((tagtype & MFU_TT_MAGIC_1A) == MFU_TT_MAGIC_1A) ? _GREEN_("Gen 1a") : "");
@@ -1092,7 +1094,7 @@ static int ulaes_print_configuration(uint8_t *data, uint8_t start_page) {
     bool cnt_rd_en = (data[4] & 4);
     uint16_t authlim = (data[6]) | ((data[7] & 0x3) << 8);
 
-    PrintAndLogEx(INFO, "  cfg0 [%u/0x%02X]: %s", start_page, start_page, sprint_hex(data, 4));
+    PrintAndLogEx(INFO, "  cfg0 [%u/0x%02X]: " _YELLOW_("%s"), start_page, start_page, sprint_hex_inrow(data, 4));
 
     PrintAndLogEx(INFO, "                    - Random ID is %s", (rid_act) ? "enabled" : "disabled");
     PrintAndLogEx(INFO, "                    - Secure messaging is %s", (sec_msg_act) ? "enabled" : "disabled");
@@ -1101,7 +1103,7 @@ static int ulaes_print_configuration(uint8_t *data, uint8_t start_page) {
     } else {
         PrintAndLogEx(INFO, "                    - pages don't need authentication");
     }
-    PrintAndLogEx(INFO, "  cfg1 [%u/0x%02X]: %s", start_page + 1, start_page + 1,  sprint_hex(data + 4, 4));
+    PrintAndLogEx(INFO, "  cfg1 [%u/0x%02X]: " _YELLOW_("%s"), start_page + 1, start_page + 1,  sprint_hex_inrow(data + 4, 4));
 
     if (authlim == 0) {
         PrintAndLogEx(INFO, "                    - " _GREEN_("Unlimited authentication attempts"));
@@ -1130,7 +1132,7 @@ static int ulev1_print_configuration(uint64_t tagtype, uint8_t *data, uint8_t st
 
     uint8_t vctid = data[5];
 
-    PrintAndLogEx(INFO, "  cfg0 [%u/0x%02X]: %s", startPage, startPage, sprint_hex(data, 4));
+    PrintAndLogEx(INFO, "  cfg0 [%u/0x%02X]: " _YELLOW_("%s"), startPage, startPage, sprint_hex_inrow(data, 4));
 
     //NTAG213TT has different ASCII mirroring options and config bytes interpretation from other ulev1 class tags
     if (tagtype & MFU_TT_NTAG_213_TT) {
@@ -1305,7 +1307,7 @@ static int ulev1_print_configuration(uint64_t tagtype, uint8_t *data, uint8_t st
         }
     }
 
-    PrintAndLogEx(INFO, "  cfg1 [%u/0x%02X]: %s", startPage + 1, startPage + 1,  sprint_hex(data + 4, 4));
+    PrintAndLogEx(INFO, "  cfg1 [%u/0x%02X]: " _YELLOW_("%s"), startPage + 1, startPage + 1,  sprint_hex_inrow(data + 4, 4));
     if (authlim == 0)
         PrintAndLogEx(INFO, "                    - " _GREEN_("Unlimited password attempts"));
     else
@@ -1317,16 +1319,16 @@ static int ulev1_print_configuration(uint64_t tagtype, uint8_t *data, uint8_t st
     PrintAndLogEx(INFO, "                    - user configuration %s", cfglck ? "permanently locked" : "writeable");
     PrintAndLogEx(INFO, "                    - %s access is protected with password", prot ? "read and write" : "write");
     PrintAndLogEx(INFO, "                    - %02X, Virtual Card Type Identifier is %sdefault", vctid, (vctid == 0x05) ? "" : "not ");
-    PrintAndLogEx(INFO, "  PWD  [%u/0x%02X]: %s- ( cannot be read )", startPage + 2, startPage + 2,  sprint_hex(data + 8, 4));
-    PrintAndLogEx(INFO, "  PACK [%u/0x%02X]: %s      - ( cannot be read )", startPage + 3, startPage + 3,  sprint_hex(data + 12, 2));
-    PrintAndLogEx(INFO, "  RFU  [%u/0x%02X]:       %s- ( cannot be read )", startPage + 3, startPage + 3,  sprint_hex(data + 14, 2));
+    PrintAndLogEx(INFO, "  PWD  [%u/0x%02X]: %s ( cannot be read )", startPage + 2, startPage + 2,  sprint_hex_inrow(data + 8, 4));
+    PrintAndLogEx(INFO, "  PACK [%u/0x%02X]: %s     ( cannot be read )", startPage + 3, startPage + 3,  sprint_hex_inrow(data + 12, 2));
+    PrintAndLogEx(INFO, "  RFU  [%u/0x%02X]:     %s ( cannot be read )", startPage + 3, startPage + 3,  sprint_hex_inrow(data + 14, 2));
 
     if (tagtype & MFU_TT_NTAG_213_TT) {
         if (data[1] & 0x06) {
-            PrintAndLogEx(INFO, "TT_MSG [45/0x2D]: %s- (cannot be read)", sprint_hex(tt_message, tt_msg_resp_len));
+            PrintAndLogEx(INFO, "TT_MSG [45/0x2D]: %s (cannot be read)", sprint_hex_inrow(tt_message, tt_msg_resp_len));
             PrintAndLogEx(INFO, "                    - tamper message is masked in memory");
         } else {
-            PrintAndLogEx(INFO, "TT_MSG [45/0x2D]: %s", sprint_hex(tt_message, tt_msg_resp_len));
+            PrintAndLogEx(INFO, "TT_MSG [45/0x2D]: %s", sprint_hex_inrow(tt_message, tt_msg_resp_len));
             PrintAndLogEx(INFO, "                    - tamper message is %s and is readable/writablbe in memory", sprint_hex(tt_message, tt_msg_resp_len));
         }
     }
@@ -1342,7 +1344,7 @@ static int ulev1_print_configuration(uint64_t tagtype, uint8_t *data, uint8_t st
 
         PrintAndLogEx(NORMAL, "");
         PrintAndLogEx(INFO, "--- " _CYAN_("Tamper Status"));
-        PrintAndLogEx(INFO, "  READ_TT_STATUS: %s", sprint_hex(tt_status_resp, 5));
+        PrintAndLogEx(INFO, "  READ_TT_STATUS: %s", sprint_hex_inrow(tt_status_resp, 5));
 
         PrintAndLogEx(INFO, "     Tamper status result from this power-up:");
         switch (tt_status_resp[4]) {
@@ -1523,7 +1525,7 @@ static int ulev1_print_signature(uint64_t tagtype, uint8_t *uid, uint8_t *signat
 static int ulev1_print_version(uint8_t *data) {
     PrintAndLogEx(NORMAL, "");
     PrintAndLogEx(INFO, "--- " _CYAN_("Tag Version"));
-    PrintAndLogEx(INFO, "       Raw bytes: %s", sprint_hex(data, 8));
+    PrintAndLogEx(INFO, "       Raw bytes: " _YELLOW_("%s"), sprint_hex_inrow(data, 8));
     PrintAndLogEx(INFO, "       Vendor ID: %02X, %s", data[1], getTagInfo(data[1]));
     PrintAndLogEx(INFO, "    Product type: %s", getProductTypeStr(data[2]));
     PrintAndLogEx(INFO, " Product subtype: %02X, %s", data[3], (data[3] == 1) ? "17 pF" : "50pF");
@@ -1659,6 +1661,7 @@ static uint64_t ul_magic_test(void) {
     if ((is_generation & MAGIC_FLAG_GEN_1B) == MAGIC_FLAG_GEN_1B) {
         return MFU_TT_MAGIC_1B | MFU_TT_MAGIC;
     }
+
     if ((is_generation & MAGIC_FLAG_NTAG21X) == MAGIC_FLAG_NTAG21X) {
         return MFU_TT_MAGIC_NTAG21X | MFU_TT_MAGIC;
     }
@@ -2166,9 +2169,11 @@ uint64_t GetHF14AMfU_Type(void) {
                 NT2L1001G0DUx 0004040102000B03
                 NT2H1001G0DUx 0004040202000B03
                 NT2H1311TTDUx 0004040203000F03
-                Micron UL 0034210101000E03
-                Feiju NTAG 0053040201000F03
                 MF0AES2001DUD 0004030104000F03
+
+                Micron UL       0034210101000E03
+                Feiju NTAG      0053040201000F03
+                Feiju NTAG 215  0005340201001103
                 */
 
                 if (memcmp(version, "\x00\x04\x03\x01\x01\x00\x0B", 7) == 0)      { tagtype = MFU_TT_UL_EV1_48; break; }
@@ -2186,6 +2191,7 @@ uint64_t GetHF14AMfU_Type(void) {
                 else if (memcmp(version, "\x00\x53\x04\x02\x01\x00\x0F", 7) == 0) { tagtype = MFU_TT_NTAG_213; break; } // Shanghai Feiju Microelectronics Co. Ltd. China (Xiaomi Air Purifier filter)
                 else if (memcmp(version, "\x00\x04\x04\x02\x01\x01\x0F", 7) == 0) { tagtype = MFU_TT_NTAG_213_C; break; }
                 else if (memcmp(version, "\x00\x04\x04\x02\x01\x00\x11", 7) == 0) { tagtype = MFU_TT_NTAG_215; break; }
+                else if (memcmp(version, "\x00\x05\x34\x02\x01\x00\x11", 7) == 0) { tagtype = MFU_TT_NTAG_215; break; }  // Shanghai Feiju  Microelectronics Co. Ltd. China
                 else if (memcmp(version, "\x00\x04\x04\x02\x01\x00\x13", 7) == 0) { tagtype = MFU_TT_NTAG_216; break; }
                 else if (memcmp(version, "\x00\x04\x04\x04\x01\x00\x0F", 7) == 0) { tagtype = MFU_TT_NTAG_213_F; break; }
                 else if (memcmp(version, "\x00\x04\x04\x04\x01\x00\x13", 7) == 0) { tagtype = MFU_TT_NTAG_216_F; break; }
@@ -2213,7 +2219,8 @@ uint64_t GetHF14AMfU_Type(void) {
                 break;
         }
 
-        // UL vs UL-C vs ntag203 test
+        // This is a test from cards that doesn't answer to GET_VERSION command
+        // UL vs UL-C vs NTAG203 vs FUDAN FM11NT021 (which is NTAG213 compatiable)
         if (tagtype & (MFU_TT_UL | MFU_TT_UL_C | MFU_TT_NTAG_203)) {
             if (ul_select(&card) == false) {
                 return MFU_TT_UL_ERROR;
@@ -2232,22 +2239,35 @@ uint64_t GetHF14AMfU_Type(void) {
                 }
 
                 uint8_t data[16] = {0x00};
+
                 // read page 0x26-0x29 (last valid ntag203 page)
+                // if error response, its ULTRALIGHT since doesn't have that memory block
                 status = ul_read(0x26, data, sizeof(data));
                 if (status <= 1) {
                     tagtype = MFU_TT_UL;
                 } else {
-                    // read page 0x30 (should error if it is a ntag203)
-                    status = ul_read(0x30, data, sizeof(data));
+
+                    // read page 44 / 0x2C
+                    // if error response, its NTAG203 since doesn't have that memory block
+                    status = ul_read(0x2C, data, sizeof(data));
                     if (status <= 1) {
                         tagtype = MFU_TT_NTAG_203;
                     } else {
-                        tagtype = MFU_TT_UNKNOWN;
+
+                        // read page 48 / 0x30
+                        // if response, its FUDAN FM11NT021
+                        status = ul_read(0x30, data, sizeof(data));
+                        if (status == sizeof(data)) {
+                            tagtype = MFU_TT_NTAG_213;
+                        } else  {
+                            tagtype = MFU_TT_UNKNOWN;
+                        }
                     }
                 }
                 DropField();
             }
         }
+
         if (tagtype & MFU_TT_UL) {
             tagtype = ul_fudan_check();
             DropField();
@@ -2658,6 +2678,11 @@ out:
         PrintAndLogEx(INFO, "\nTag appears to be locked, try using a key to get more info");
         PrintAndLogEx(HINT, "Hint: try " _YELLOW_("`hf mfu pwdgen -r`") " to get see known pwd gen algo suggestions");
     }
+
+    if (tagtype & (MFU_TT_MAGIC_1A | MFU_TT_MAGIC_1B | MFU_TT_MAGIC_2)) {
+        PrintAndLogEx(HINT, "Hint: try " _YELLOW_("`script run hf_mfu_setuid -h`") " to set UID");
+    }
+
     PrintAndLogEx(NORMAL, "");
     return PM3_SUCCESS;
 }
