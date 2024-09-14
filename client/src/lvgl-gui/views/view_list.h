@@ -11,6 +11,8 @@ typedef enum {
   VIEW_HFTRACE,
   VIEW_MFC_MENU,
 
+  VIEW_HF_COPYUID,
+
   VIEW_FILE_MANAGER,
   VIEW_COUNT, // Always last element
 } ViewList;

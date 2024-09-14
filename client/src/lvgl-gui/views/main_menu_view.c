@@ -25,7 +25,7 @@ static void event_handler(lv_event_t *e) {
     } else if (strcmp(button_text, "Mifare Classic") == 0) {
       view_manager_switch_view(view_manager, VIEW_MFC_MENU, NULL);
     } else if (strcmp(button_text, "Copy UID") == 0) {
-      // Switch to view
+      view_manager_switch_view(view_manager, VIEW_HF_COPYUID, NULL);
     } else if (strcmp(button_text, "Browse files") == 0) {
       FileManagerData *fm_data = malloc(sizeof(*fm_data));
       fm_data->prev_view = VIEW_MAIN_MENU;
