@@ -41,7 +41,12 @@ static void event_handler(lv_event_t *e) {
         return;
       }
       lv_label_set_text(magic_label, "Magic card detected");
-
+      iso14a_card_select_t *magic = hf14a_read(false, true, false, false);
+      if (magic && card && magic->uidlen != card->uidlen) {
+        lv_label_ins_text(magic_label, LV_LABEL_POS_LAST,
+                          "\nUID length mismatch");
+        return;
+      }
       if (card && card->uidlen > 0) {
         int res = hf_set_magic_uid(card->uid, card->uidlen, type);
         if (res) {
