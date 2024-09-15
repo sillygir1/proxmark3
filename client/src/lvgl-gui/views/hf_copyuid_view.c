@@ -25,7 +25,7 @@ static void event_handler(lv_event_t *e) {
     // printf("%s\n", button_text);
     if (strcmp(button_text, "Read UID") == 0) {
       card = hf14a_read(false, true, false, false);
-      if (!card || !card->uidlen > 0)
+      if (!card || card->uidlen == 0)
         return;
       lv_label_set_text(uid_label, "UID: ");
       char buff[16];
@@ -33,15 +33,25 @@ static void event_handler(lv_event_t *e) {
         snprintf(buff, 16, "%02X ", card->uid[i]);
         lv_label_ins_text(uid_label, LV_LABEL_POS_LAST, buff);
       }
+      lv_label_set_text(magic_label, "");
     } else if (strcmp(button_text, "Write UID") == 0) {
-      if (!hf_get_magic_tag_type()) {
+      uint16_t type = hf_get_magic_tag_type();
+      if (!type) {
         lv_label_set_text(magic_label, "No magic card detected");
         return;
       }
       lv_label_set_text(magic_label, "Magic card detected");
 
-      // TODO write uid
-
+      if (card && card->uidlen > 0) {
+        int res = hf_set_magic_uid(card->uid, card->uidlen, type);
+        if (res) {
+          lv_label_ins_text(magic_label, LV_LABEL_POS_LAST,
+                            "\nFailed to set UID");
+        } else {
+          lv_label_ins_text(magic_label, LV_LABEL_POS_LAST,
+                            "\nUID set successfully");
+        }
+      }
     } else if (strcmp(button_text, "Back") == 0) {
       view_manager_switch_view(view_manager, VIEW_MAIN_MENU, NULL);
     }
