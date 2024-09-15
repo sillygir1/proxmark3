@@ -3,6 +3,7 @@
 #include "../comms.h"
 #include "storage.h"
 #include "view_manager.h"
+#include <fpga.h>
 #include <mifare.h>
 
 typedef enum {
@@ -20,3 +21,5 @@ typedef struct {
 
 iso14a_card_select_t *hf14a_read(bool keep_field, bool skip_RATS, bool ecp,
                                  bool magsafe);
+
+uint16_t hf_get_magic_tag_type();

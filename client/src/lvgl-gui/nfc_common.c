@@ -2,6 +2,8 @@
 
 iso14a_card_select_t *hf14a_read(bool keep_field, bool skip_RATS, bool ecp,
                                  bool magsafe) {
+  set_fpga_mode(FPGA_BITSTREAM_HF);
+
   uint32_t cm = ISO14A_CONNECT;
   if (keep_field)
     cm |= ISO14A_NO_DISCONNECT;
@@ -27,4 +29,20 @@ iso14a_card_select_t *hf14a_read(bool keep_field, bool skip_RATS, bool ecp,
   memcpy(card, (iso14a_card_select_t *)resp.data.asBytes,
          sizeof(iso14a_card_select_t));
   return card;
+}
+
+uint16_t hf_get_magic_tag_type() {
+  set_fpga_mode(FPGA_BITSTREAM_HF);
+
+  // TODO add key loading
+
+  uint16_t isMagic = 0;
+  isMagic = detect_mf_magic(true, MF_KEY_B, 0xFFFFFFFF);
+  if (isMagic == 0) {
+    isMagic = detect_mf_magic(true, MF_KEY_A, 0xFFFFFFFF);
+  }
+
+  if (isMagic)
+    printf("Magic card detected!\n");
+  return isMagic;
 }
