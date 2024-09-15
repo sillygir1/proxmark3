@@ -6,6 +6,7 @@
 #include "view_manager.h"
 
 static lv_obj_t *list;
+static ViewManager *view_manager;
 
 #define ITEMS_NUM 5
 static const char *menu_items[ITEMS_NUM] = {"Info", "Dump", "Saved tags",
@@ -17,7 +18,6 @@ static const char *menu_icons[ITEMS_NUM] = {LV_SYMBOL_FILE, LV_SYMBOL_SAVE,
 static void event_handler(lv_event_t *e) {
   lv_event_code_t code = lv_event_get_code(e);
   lv_obj_t *obj = lv_event_get_target(e);
-  ViewManager *view_manager = lv_event_get_user_data(e);
 
   if (code == LV_EVENT_CLICKED) {
     const char *button_text = lv_list_get_btn_text(list, obj);
@@ -49,17 +49,12 @@ static void event_handler(lv_event_t *e) {
 }
 
 void hfmf_init(void *_view_manager, void *ctx) {
-  ViewManager *view_manager = _view_manager;
-  list = lv_list_create(view_manager->obj_parent);
-  lv_obj_set_style_radius(list, 0, LV_PART_MAIN);
-  lv_obj_set_width(list, 240);
-  lv_obj_set_height(list, 295);
+  view_manager = _view_manager;
   set_mode_text("Mifare Classic");
-  lv_obj_t *btn;
-  for (uint8_t i = 0; i < ITEMS_NUM; i++) {
-    btn = lv_list_add_btn(list, menu_icons[i], menu_items[i]);
-    lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
-  }
+
+  ViewManagerList vm_list = {
+      menu_items, (const void **)menu_icons, ITEMS_NUM, NULL, 0, event_handler};
+  list = view_manager_list_init(view_manager, &vm_list);
 }
 
 void hfmf_exit() { lv_obj_del(list); }
