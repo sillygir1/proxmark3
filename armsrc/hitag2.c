@@ -14,8 +14,6 @@
 // See LICENSE.txt for the text of the license.
 //-----------------------------------------------------------------------------
 
-#define DBG  if (g_dbglevel >= DBG_EXTENDED)
-
 #include "hitag2.h"
 #include "hitag2/hitag2_crypto.h"
 #include "string.h"
@@ -1432,12 +1430,7 @@ void SimulateHitag2(bool ledcontrol) {
 
     auth_table_len = 0;
     auth_table_pos = 0;
-//    auth_table = BigBuf_malloc(AUTH_TABLE_LENGTH);
-//    memset(auth_table, 0x00, AUTH_TABLE_LENGTH);
-
-    // Reset the received frame, frame count and timing info
-//    memset(rx, 0x00, sizeof(rx));
-//    memset(tx, 0x00, sizeof(tx));
+//    auth_table = BigBuf_calloc(AUTH_TABLE_LENGTH);
 
     DbpString("Starting Hitag 2 simulation");
 
@@ -2090,7 +2083,7 @@ void WriterHitag(const lf_hitag_data_t *payload, bool ledcontrol) {
     // Check configuration
     switch (payload->cmd) {
         case WHT2F_CRYPTO: {
-            DbpString("Authenticating using key:");
+            DBG DbpString("Authenticating using key:");
             memcpy(key, payload->key, 6); //HACK; 4 or 6??  I read both in the code.
             memcpy(writedata, payload->data, 4);
             Dbhexdump(6, key, false);
@@ -2114,7 +2107,7 @@ void WriterHitag(const lf_hitag_data_t *payload, bool ledcontrol) {
         }
         break;
         default: {
-            Dbprintf("Error, unknown function: " _RED_("%d"), payload->cmd);
+            DBG Dbprintf("Error, unknown function: " _RED_("%d"), payload->cmd);
             reply_ng(CMD_LF_HITAG2_WRITE, PM3_ESOFT, NULL, 0);
             return;
         }
@@ -2590,7 +2583,6 @@ bool ht2_packbits(uint8_t *nrz_samples, size_t nrzs, uint8_t *rx, size_t *rxlen)
     }
     return true;
 }
-
 int ht2_read_uid(uint8_t *uid, bool ledcontrol, bool send_answer, bool keep_field_up) {
 
     g_logging = false;
@@ -2599,6 +2591,7 @@ int ht2_read_uid(uint8_t *uid, bool ledcontrol, bool send_answer, bool keep_fiel
     if (keep_field_up == false) {
         clear_trace();
     }
+
 
     // hitag 2 state machine?
     hitag2_init();

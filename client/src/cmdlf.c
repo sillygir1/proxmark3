@@ -40,6 +40,7 @@
 #include "cmdlfem4x70.h"    // for em4x70
 #include "cmdlfhid.h"       // for hid menu
 #include "cmdlfhitag.h"     // for hitag menu
+#include "cmdlfhitaghts.h"  // for hitag S sub commands
 #include "cmdlfidteck.h"    // for idteck menu
 #include "cmdlfio.h"        // for ioprox menu
 #include "cmdlfcotag.h"     // for COTAG menu
@@ -241,6 +242,8 @@ static int CmdLFTune(const char *Cmd) {
     return PM3_SUCCESS;
 }
 
+#define PAYLOAD_HEADER_SIZE (12 + (3 * LF_CMDREAD_MAX_EXTRA_SYMBOLS))
+
 /* send a LF command before reading */
 int CmdLFCommandRead(const char *Cmd) {
     CLIParserContext *ctx;
@@ -274,7 +277,7 @@ int CmdLFCommandRead(const char *Cmd) {
     CLIExecWithReturn(ctx, Cmd, argtable, false);
     uint32_t delay = arg_get_u32_def(ctx, 1, 0);
 
-    char cmd[128] = {0};
+    char cmd[PM3_CMD_DATA_SIZE - PAYLOAD_HEADER_SIZE] = {0};
     int cmd_len = sizeof(cmd) - 1; // CLIGetStrWithReturn does not guarantee string to be null-terminated
     CLIGetStrWithReturn(ctx, 2, (uint8_t *)cmd, &cmd_len);
 
@@ -295,7 +298,6 @@ int CmdLFCommandRead(const char *Cmd) {
         return PM3_ENOTTY;
     }
 
-#define PAYLOAD_HEADER_SIZE (12 + (3 * LF_CMDREAD_MAX_EXTRA_SYMBOLS))
     struct p {
         uint32_t delay;
         uint16_t period_0;
@@ -316,15 +318,23 @@ int CmdLFCommandRead(const char *Cmd) {
     memset(payload.symbol_extra, 0, sizeof(payload.symbol_extra));
     memset(payload.period_extra, 0, sizeof(payload.period_extra));
 
-    if (add_crc_ht && (cmd_len <= 120)) {
+    if (cmd_len > sizeof(payload.data) - 8 * add_crc_ht - 1) {
+        PrintAndLogEx(ERR, "cmd too long, max length is %zu", sizeof(cmd) - 1);
+        return PM3_EINVARG;
+    }
+
+    if (add_crc_ht) {
+
         // Hitag 1, Hitag S, ZX8211
         // width=8 poly=0x1d init=0xff refin=false refout=false xorout=0x00 check=0xb4 residue=0x00 name="CRC-8/HITAG"
         crc_t crc;
+        crc_init_ref(&crc, 8, 0x1d, 0xff, 0, false, false);
+
         uint8_t data = 0;
         uint8_t n = 0;
-        crc_init_ref(&crc, 8, 0x1d, 0xff, 0, false, false);
-        uint8_t i;
-        for (i = 0; i < cmd_len; i++) {
+
+        for (int i = 0; i < cmd_len; i++) {
+
             if ((cmd[i] != '0') && (cmd[i] != '1')) {
                 // avoid include 'W0S' in crc
                 crc_init_ref(&crc, 8, 0x1d, 0xff, 0, false, false);
@@ -332,18 +342,22 @@ int CmdLFCommandRead(const char *Cmd) {
                 data = 0;
                 continue;
             }
+
             data <<= 1;
             data += cmd[i] - '0';
-            n += 1;
+            n++;
+
             if (n == 8) {
                 crc_update2(&crc, data, n);
                 n = 0;
                 data = 0;
             }
         }
+
         if (n > 0) {
             crc_update2(&crc, data, n);
         }
+
         uint8_t crc_final = crc_finish(&crc);
         for (int j = 7; j >= 0; j--) {
             cmd[cmd_len] = ((crc_final >> j) & 1) ? '1' : '0';
@@ -1542,7 +1556,9 @@ static bool check_chiptype(bool getDeviceData) {
 
     bool retval = false;
 
-    if (!getDeviceData) return retval;
+    if (getDeviceData == false) {
+        return retval;
+    }
 
     //Save the state of the Graph and Demod Buffers
     buffer_savestate_t saveState_gb = save_bufferS32(g_GraphBuffer, g_GraphTraceLen);
@@ -1553,7 +1569,7 @@ static bool check_chiptype(bool getDeviceData) {
 
     //check for em4x05/em4x69 chips first
     uint32_t word = 0;
-    if (IfPm3EM4x50() && em4x05_isblock0(&word)) {
+    if (em4x05_isblock0(&word)) {
         PrintAndLogEx(SUCCESS, "Chipset detection: " _GREEN_("EM4x05 / EM4x69"));
         PrintAndLogEx(HINT, "Hint: try " _YELLOW_("`lf em 4x05`") " commands");
         retval = true;
@@ -1567,6 +1583,27 @@ static bool check_chiptype(bool getDeviceData) {
         retval = true;
         goto out;
     }
+
+
+    if (IfPm3Hitag()) {
+
+        // Hitag 2
+        if (ht2_read_uid() == PM3_SUCCESS) {
+            PrintAndLogEx(SUCCESS, "Chipset detection: " _GREEN_("Hitag 2"));
+            PrintAndLogEx(HINT, "Hint: try " _YELLOW_("`lf hitag`") " commands");
+            retval = true;
+            goto out;
+        }
+
+        // Hitag S
+        if (read_hts_uid() == PM3_SUCCESS) {
+            PrintAndLogEx(SUCCESS, "Chipset detection: " _GREEN_("Hitag S / 82xx"));
+            PrintAndLogEx(HINT, "Hint: try " _YELLOW_("`lf hitag hts`") " commands");
+            retval = true;
+            goto out;
+        }
+    }
+
 
 #if !defined ICOPYX
     // check for em4x50 chips
@@ -1662,8 +1699,9 @@ int CmdLFfind(const char *Cmd) {
     CLIParserFree(ctx);
     int found = 0;
     bool is_online = (g_session.pm3_present && (use_gb == false));
-    if (is_online)
+    if (is_online) {
         lf_read(false, 30000);
+    }
 
     size_t min_length = 2000;
     if (g_GraphTraceLen < min_length) {
@@ -1683,17 +1721,6 @@ int CmdLFfind(const char *Cmd) {
 
     // only run these tests if device is online
     if (is_online) {
-
-        if (IfPm3Hitag()) {
-            if (readHitagUid() == PM3_SUCCESS) {
-                PrintAndLogEx(SUCCESS, "\nValid " _GREEN_("Hitag") " found!");
-                if (search_cont) {
-                    found++;
-                } else {
-                    return PM3_SUCCESS;
-                }
-            }
-        }
 
 #if !defined ICOPYX
         if (IfPm3EM4x50()) {
