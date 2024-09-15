@@ -46,3 +46,24 @@ uint16_t hf_get_magic_tag_type() {
     printf("Magic card detected!\n");
   return isMagic;
 }
+
+bool hf_set_magic_uid(uint8_t *uid, uint8_t uidlen, uint16_t magic_type) {
+
+  if (magic_type == 0) {
+    magic_type = hf_get_magic_tag_type();
+  }
+  if (magic_type == 0) {
+    return false;
+  } else if (magic_type & (MAGIC_FLAG_GEN_1A | MAGIC_FLAG_GEN_1B)) {
+    uint8_t old_uid[7] = {0};
+    uint8_t verify_uid[7] = {0};
+    int res = mfCSetUID(uid, uidlen, NULL, NULL, old_uid, verify_uid, false);
+    res = memcmp(uid, verify_uid, uidlen);
+    if (res)
+      return false;
+  } else if (magic_type & MAGIC_FLAG_GEN_2) {
+    // TODO: write gen2 uid
+  }
+
+  return false;
+}
