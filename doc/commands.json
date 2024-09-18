@@ -1384,7 +1384,7 @@
         },
         "hf 14a sniff": {
             "command": "hf 14a sniff",
-            "description": "Sniff the communication between Hitag reader and tag. Use `hf 14a list` to view collected data.",
+            "description": "Sniff the communication between reader and tag Use `hf 14a list` to view collected data.",
             "notes": [
                 "hf 14a sniff -c -r"
             ],
@@ -1598,7 +1598,7 @@
         },
         "hf 14b sniff": {
             "command": "hf 14b sniff",
-            "description": "Sniff the communication between reader and tag. Use `hf 14b list` to view collected data.",
+            "description": "Sniff the communication between reader and tag Use `hf 14b list` to view collected data.",
             "notes": [
                 "hf 14b sniff"
             ],
@@ -3605,7 +3605,7 @@
         },
         "hf iclass sniff": {
             "command": "hf iclass sniff",
-            "description": "Sniff the communication reader and tag",
+            "description": "Sniff the communication between reader and tag",
             "notes": [
                 "hf iclass sniff",
                 "hf iclass sniff -j -> jam e-purse updates"
@@ -3616,19 +3616,6 @@
                 "-j, --jam Jam (prevent) e-purse updates"
             ],
             "usage": "hf iclass sniff [-hj]"
-        },
-        "hf iclass spoof": {
-            "command": "hf iclass spoof",
-            "description": "Watch 'nd Spoof, activates reader Waits until a Picopass tag gets presented then Proxmark3 tries to dump it and then starts simulating",
-            "notes": [
-                "hf iclass spoof"
-            ],
-            "offline": false,
-            "options": [
-                "-h, --help This help",
-                "-v, --verbose Verbose output"
-            ],
-            "usage": "hf iclass spoof [-hv]"
         },
         "hf iclass view": {
             "command": "hf iclass view",
@@ -9744,7 +9731,7 @@
             "description": "Read Hitag S memory. Crypto mode: - key format ISK high + ISK low - default key 4F4E4D494B52 (ONMIKR) 8268/8310 password mode: - default password BBDD3399",
             "notes": [
                 "lf hitag hts rdbl -> Hitag S/8211, plain mode",
-                "lf hitag hts rdbl --8 -k BBDD3399 -> 8268/8310, password mode",
+                "lf hitag hts rdbl --82xx -k BBDD3399 -> 8268/8310, password mode",
                 "lf hitag hts rdbl --nrar 0102030411223344 -> Hitag S, challenge mode",
                 "lf hitag hts rdbl --crypto -> Hitag S, crypto mode, def key",
                 "lf hitag hts rdbl -k 4F4E4D494B52 -> Hitag S, crypto mode"
@@ -9778,7 +9765,7 @@
             "description": "Write a page in Hitag S memory. Crypto mode: - key format ISK high + ISK low - default key 4F4E4D494B52 (ONMIKR) 8268/8310 password mode: - default password BBDD3399",
             "notes": [
                 "lf hitag hts wrbl -p 6 -d 01020304 -> Hitag S/8211, plain mode",
-                "lf hitag hts wrbl -p 6 -d 01020304 --8 -k BBDD3399 -> 8268/8310, password mode",
+                "lf hitag hts wrbl -p 6 -d 01020304 --82xx -k BBDD3399 -> 8268/8310, password mode",
                 "lf hitag hts wrbl -p 6 -d 01020304 --nrar 0102030411223344 -> Hitag S, challenge mode",
                 "lf hitag hts wrbl -p 6 -d 01020304 --crypto -> Hitag S, crypto mode, default key",
                 "lf hitag hts wrbl -p 6 -d 01020304 -k 4F4E4D494B52 -> Hitag S, crypto mode"
@@ -9787,13 +9774,13 @@
             "options": [
                 "-h, --help This help",
                 "--nrar <hex> nonce / answer writer, 8 hex bytes",
-                "--8 8268/8310 mode",
+                "-8, --82xx 8268/8310 mode",
                 "--crypto crypto mode",
                 "-k, --key <hex> pwd or key, 4 or 6 hex bytes",
                 "-p, --page <dec> page address to write to",
                 "-d, --data <hex> data, 4 hex bytes"
             ],
-            "usage": "lf hitag hts wrbl [-h] [--nrar <hex>] [--8] [--crypto] [-k <hex>] -p <dec> -d <hex>"
+            "usage": "lf hitag hts wrbl [-h8] [--nrar <hex>] [--crypto] [-k <hex>] -p <dec> -d <hex>"
         },
         "lf hitag info": {
             "command": "lf hitag info",
@@ -9886,7 +9873,7 @@
         },
         "lf hitag sniff": {
             "command": "lf hitag sniff",
-            "description": "Sniff the communication between reader and tag. Use `lf hitag list` to view collected data.",
+            "description": "Sniff the communication between reader and tag Use `lf hitag list` to view collected data.",
             "notes": [
                 "lf hitag sniff"
             ],
@@ -12917,6 +12904,6 @@
     "metadata": {
         "commands_extracted": 745,
         "extracted_by": "PM3Help2JSON v1.00",
-        "extracted_on": "2024-09-14T18:53:04"
+        "extracted_on": "2024-09-15T16:16:09"
     }
 }
