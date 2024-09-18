@@ -785,6 +785,7 @@ SRCS += bucketsort.c \
 # Pilk-v-software
 SRCS += $(PILK_SOFTWARE)/duo-encoder-kb/encoder.c \
 		$(PILK_SOFTWARE)/view-manager/view_manager.c \
+		$(PILK_SOFTWARE)/view-manager/view_manager_extra.c \
 		$(PILK_SOFTWARE)/duo-battery/battery.c \
 		$(PILK_SOFTWARE)/storage/storage.c \
 		$(PILK_SOFTWARE)/file-manager/file_manager.c
