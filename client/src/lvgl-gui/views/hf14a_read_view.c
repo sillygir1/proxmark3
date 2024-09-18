@@ -9,11 +9,12 @@
 static lv_obj_t *list;
 static lv_timer_t *timer;
 static ViewManager *view_manager;
-bool keep_field;
-bool ecp;
-bool magsafe;
-bool skip_RATS;
-bool reading;
+
+static bool keep_field;
+static bool ecp;
+static bool magsafe;
+static bool skip_RATS;
+static bool reading;
 
 #define OPTIONS_NUM 6
 static const char *options[OPTIONS_NUM] = {
