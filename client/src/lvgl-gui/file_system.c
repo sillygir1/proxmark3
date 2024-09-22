@@ -5,12 +5,12 @@ void *fs_read_card(FileManagerData *fm_data) {
   if (!fm_data)
     return NULL;
 
-  char *buff = malloc(sizeof(char) * 64);
+  char *buff = calloc(64, sizeof(char));
   int n = storage_file_read(fm_data->dir, fm_data->filename, buff, 64);
 
   if (strncmp(ISO14443A_HEADER, buff, 14) == 0) {
     // Parse file as iso 14443-a
-    iso14a_card_select_t *card = malloc(sizeof(*card));
+    iso14a_card_select_t *card = calloc(1, sizeof(*card));
     card->ats_len = 0;
     char *end; // For strtol
     char *p = buff + 15;
@@ -46,8 +46,7 @@ void *fs_read_card(FileManagerData *fm_data) {
 void *fs_save_card(void *_card, CardType type) {
   if (type == TYPE_ISO14443A) {
     iso14a_card_select_t *card = _card;
-    char *filename = malloc(sizeof(char) * 64);
-    memset(filename, 0, 64);
+    char *filename = calloc(64, sizeof(char));
 
     char buff[256];
     for (uint8_t i = 0; i < card->uidlen; i++) {

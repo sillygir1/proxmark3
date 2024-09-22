@@ -24,7 +24,7 @@ static void event_handler(lv_event_t *e) {
     if (strcmp(button_text, "Read tag") == 0) {
       view_manager_switch_view(view_manager, VIEW_HF14AREAD, NULL);
     } else if (strcmp(button_text, "Saved tags") == 0) {
-      FileManagerData *fm_data = malloc(sizeof(*fm_data));
+      FileManagerData *fm_data = calloc(1, sizeof(*fm_data));
       fm_data->prev_view = VIEW_HF14A;
       strcpy(fm_data->dir, ISO14443A_PATH);
       fm_data->file_type = TYPE_ISO14443A;
@@ -34,7 +34,7 @@ static void event_handler(lv_event_t *e) {
     } else if (strcmp(button_text, "Sniff") == 0) {
       view_manager_switch_view(view_manager, VIEW_HF14ASNIFF, NULL);
     } else if (strcmp(button_text, "Trace") == 0) {
-      UserData *td = malloc(sizeof(*td));
+      UserData *td = calloc(1, sizeof(*td));
       td->prev_view = VIEW_HF14A;
       td->data = TYPE_ISO14443A;
       view_manager_switch_view(view_manager, VIEW_HFTRACE, td);

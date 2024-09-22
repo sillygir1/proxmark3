@@ -172,14 +172,14 @@ void gui_init() {
   buttons_drv.read_cb = buttons_cb;
   lv_indev_t *buttons_indev = lv_indev_drv_register(&buttons_drv);
 
-  proxmark_data = malloc(sizeof(*proxmark_data));
+  proxmark_data = calloc(1, sizeof(*proxmark_data));
   proxmark_data->running = &running;
 
   proxmark_data->input_group = lv_group_create();
   lv_group_set_default(proxmark_data->input_group);
   lv_indev_set_group(encoder_indev, proxmark_data->input_group);
   lv_indev_set_group(buttons_indev, proxmark_data->input_group);
-  proxmark_data->enc_data = malloc(sizeof(*proxmark_data->enc_data));
+  proxmark_data->enc_data = calloc(1, sizeof(*proxmark_data->enc_data));
   proxmark_data->enc_data->running = &running;
 
   encoder_grab(proxmark_data->enc_data);

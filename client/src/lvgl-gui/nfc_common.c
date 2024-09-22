@@ -25,7 +25,7 @@ iso14a_card_select_t *hf14a_read(bool keep_field, bool skip_RATS, bool ecp,
   PacketResponseNG resp;
   WaitForResponseTimeout(CMD_ACK, &resp, 2500);
   DropField();
-  iso14a_card_select_t *card = malloc(sizeof(*card));
+  iso14a_card_select_t *card = calloc(1, sizeof(*card));
   memcpy(card, (iso14a_card_select_t *)resp.data.asBytes,
          sizeof(iso14a_card_select_t));
   return card;

@@ -28,7 +28,7 @@ static void event_handler(lv_event_t *e) {
     } else if (strcmp(button_text, "Dump") == 0) {
       // Dump view
     } else if (strcmp(button_text, "Saved tags") == 0) {
-      FileManagerData *fm_data = malloc(sizeof(*fm_data));
+      FileManagerData *fm_data = calloc(1, sizeof(*fm_data));
       fm_data->prev_view = VIEW_MFC_MENU;
       strcpy(fm_data->dir, MFC_PATH);
       fm_data->file_type = TYPE_MIFARECLASSIC;
@@ -36,7 +36,7 @@ static void event_handler(lv_event_t *e) {
       view_manager_switch_view(view_manager, VIEW_FILE_MANAGER, fm_data);
       file_manager_glue(fm_data, view_manager);
     } else if (strcmp(button_text, "Trace") == 0) {
-      UserData *td = malloc(sizeof(*td));
+      UserData *td = calloc(1, sizeof(*td));
       td->prev_view = VIEW_MFC_MENU;
       td->data = TYPE_MIFARECLASSIC;
       view_manager_switch_view(view_manager, VIEW_HFTRACE, td);
