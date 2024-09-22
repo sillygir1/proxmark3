@@ -114,7 +114,7 @@ void hf_copyuid_init(void *_view_manager, void *ctx) {
   list = lv_list_create(view_manager->obj_parent);
   lv_obj_set_style_radius(list, 0, LV_PART_MAIN);
   lv_obj_set_width(list, 240);
-  lv_obj_set_height(list, 110);
+  lv_obj_set_height(list, 120);
   lv_obj_align(list, LV_ALIGN_BOTTOM_LEFT, 0, 0);
   set_mode_text(MODE_LABEL);
 

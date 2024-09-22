@@ -116,16 +116,16 @@ void hf14a_card_init(void *_view_manager, void *ctx) {
   if (!card_data)
     card_data = ctx;
 
-  uint8_t list_height = 110;
+  uint8_t list_height = 120;
 
   iso14a_card_select_t *card = card_data->data;
 
   switch (card_data->prev_view) {
   case VIEW_FILE_MANAGER:
-    list_height = 70;
+    list_height = 80;
     break;
   case VIEW_HF14AREAD:
-    list_height = 110;
+    list_height = 120;
     break;
   default:
     printf("Something's wrong, exiting...");
