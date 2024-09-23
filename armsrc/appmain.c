@@ -1153,7 +1153,7 @@ static void PacketReceived(PacketCommandNG *packet) {
             lf_hitag_data_t *payload = (lf_hitag_data_t *) packet->data.asBytes;
 
             switch (payload->cmd) {
-                case RHT2F_UID_ONLY: {
+                case HT2F_UID_ONLY: {
                     ht2_read_uid(NULL, true, true, false);
                     break;
                 }
@@ -1634,9 +1634,28 @@ static void PacketReceived(PacketCommandNG *packet) {
                 uint16_t flags;
                 uint8_t uid[10];
                 uint8_t exitAfter;
+                uint8_t rats[20];
             } PACKED;
             struct p *payload = (struct p *) packet->data.asBytes;
-            SimulateIso14443aTag(payload->tagtype, payload->flags, payload->uid, payload->exitAfter);  // ## Simulate iso14443a tag - pass tag type & UID
+            SimulateIso14443aTag(payload->tagtype, payload->flags, payload->uid, payload->exitAfter, payload->rats);  // ## Simulate iso14443a tag - pass tag type & UID
+            break;
+        }
+        case CMD_HF_ISO14443A_SIM_AID: {
+            struct p {
+                uint8_t tagtype;
+                uint16_t flags;
+                uint8_t uid[10];
+                uint8_t rats[20];
+                uint8_t aid[30];
+                uint8_t response[100];
+                uint8_t apdu[100];
+                int aid_len;
+                int respond_len;
+                int apdu_len;
+                bool enumerate;
+            } PACKED;
+            struct p *payload = (struct p *) packet->data.asBytes;
+            SimulateIso14443aTagAID(payload->tagtype, payload->flags, payload->uid, payload->rats, payload->aid, payload->response, payload->apdu, payload->aid_len, payload->respond_len, payload->apdu_len, payload->enumerate);  // ## Simulate iso14443a tag - pass tag type, UID, rats, aid, resp, apdu
             break;
         }
         case CMD_HF_ISO14443A_ANTIFUZZ: {

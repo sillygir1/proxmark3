@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 This project uses the changelog in accordance with [keepchangelog](http://keepachangelog.com/). Please use this to write notable changes, which is not the same as git commit log...
 
 ## [unreleased][unreleased]
+- Print LUA and Python versions in `hw version` command (@jmichelp)
+- Updated LUA to v5.4.7 which adds utf-8 support (@jmichelp)
 - Changed `lf search` - it now tries to read and decode paxton id (@iceman1001)
 - Changed `lf search` - to identify hitag2/s/82xx in chipset detection to preserve their EM4100 or other outputs (@iceman1001)
 - Added `lf hitag hts reader` - to act as a HitagS / 82xx reader (@iceman1001)
@@ -15,6 +17,8 @@ This project uses the changelog in accordance with [keepchangelog](http://keepac
 - Changed scripting string params to accept 1024 chars, Thanks @evildaemond! (@iceman1001)
 - Added detection for FM11NT021 (@iceman1001)
 - Added detection of a magic NTAG 215 (@iceman1001)
+- Fixed hardnested on AVX512F #2410 (@xianglin1998)
+- Added `hf 14a aidsim` - simulates a PICC (like `14a sim`), and allows you to respond to specific AIDs and getData responses (@evildaemond)
 
 ## [Backdoor.4.18994][2024-09-10]
 - Changed flashing messages to be less scary (@iceman1001)

@@ -31,15 +31,13 @@
 #define HITAG2_MAX_BLOCKS       8
 #define HITAG2_MAX_BYTE_SIZE    (HITAG2_MAX_BLOCKS * HITAG_BLOCK_SIZE)
 
-#define HITAGS_NRAR_SIZE         8
-#define HITAGS_CRYPTOKEY_SIZE    6
-#define HITAGS_UID_SIZE          4
-#define HITAGS_PAGE_SIZE         4
-#define HITAGS_BLOCK_SIZE        16
-#define HITAGS_MAX_PAGES         64
-#define HITAGS_MAX_BYTE_SIZE     (HITAGS_MAX_PAGES * HITAGS_PAGE_SIZE)
-#define HITAGS_UID_PADR          0
-#define HITAGS_CONFIG_PADR       1
+#define HITAGS_PAGE_SIZE        HITAG_BLOCK_SIZE
+#define HITAGS_BLOCK_PAGES      4
+#define HITAGS_BLOCK_SIZE       (HITAGS_BLOCK_PAGES * HITAGS_MAX_PAGES)
+#define HITAGS_MAX_PAGES        64
+#define HITAGS_MAX_BYTE_SIZE    (HITAGS_MAX_PAGES * HITAGS_PAGE_SIZE)
+#define HITAGS_UID_PADR         0
+#define HITAGS_CONFIG_PADR      1
 
 // need to see which limits these cards has
 #define HITAG1_MAX_BYTE_SIZE    64
@@ -49,37 +47,33 @@
 #define HITAG2_CONFIG_BLOCK     3
 
 typedef enum {
-    RHTSF_PLAIN,
-    WHTSF_PLAIN,
-    RHTSF_82xx,
-    WHTSF_82xx,
-    RHTSF_CHALLENGE,
-    WHTSF_CHALLENGE,
-    RHTSF_KEY,
-    WHTSF_KEY,
-    HTS_LAST_CMD              = WHTSF_KEY,
+    HTSF_PLAIN,
+    HTSF_82xx,
+    HTSF_CHALLENGE,
+    HTSF_KEY,
+    HTS_LAST_CMD              = HTSF_KEY,
 
-    RHT1F_PLAIN,
-    RHT1F_AUTHENTICATE,
-    HT1_LAST_CMD              = RHT1F_AUTHENTICATE,
+    HT1F_PLAIN,
+    HT1F_AUTHENTICATE,
+    HT1_LAST_CMD              = HT1F_AUTHENTICATE,
 
-    RHT2F_PASSWORD,
-    RHT2F_AUTHENTICATE,
-    RHT2F_CRYPTO,
-    WHT2F_CRYPTO,
-    RHT2F_TEST_AUTH_ATTEMPTS,
-    RHT2F_UID_ONLY,
-    WHT2F_PASSWORD,
-    HT2_LAST_CMD              = WHT2F_PASSWORD,
+    HT2F_PASSWORD,
+    HT2F_AUTHENTICATE,
+    HT2F_CRYPTO,
+    HT2F_TEST_AUTH_ATTEMPTS,
+    HT2F_UID_ONLY,
+    HT2_LAST_CMD              = HT2F_UID_ONLY,
 } PACKED hitag_function;
 
 typedef struct {
     hitag_function cmd;
     int16_t page;
-    uint8_t data[4];
-    uint8_t NrAr[8];
-    uint8_t key[6];
-    uint8_t pwd[4];
+    uint8_t data[HITAGS_PAGE_SIZE];
+    uint8_t NrAr[HITAG_NRAR_SIZE];
+    // unaligned access to key as uint64_t will abort.
+    // todo: Why does the compiler without -munaligned-access generate unaligned-access code in the first place?
+    uint8_t key[HITAG_CRYPTOKEY_SIZE] __attribute__((aligned(4)));
+    uint8_t pwd[HITAG_PASSWORD_SIZE];
 
     // Hitag 1 section.
     // will reuse pwd or key field.
@@ -163,7 +157,7 @@ struct hitagS_tag {
             // page 2
             uint8_t  pwdl0;
             uint8_t  pwdl1;
-            uint64_t key : 48;
+            uint64_t key : 48;    // fixme: unaligned access
 
             // page 4
         } s;
