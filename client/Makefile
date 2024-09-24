@@ -16,7 +16,7 @@
 
 LVGL_DIR ?= $(PILK_SOFTWARE)/lvgl/lvgl
 
-CFLAGS += -mcpu=c906fdv -march=rv64imafdcv0p7xthead -mcmodel=medany -mabi=lp64d -DPLUGIN
+CFLAGS += -mcpu=c906fdv -march=rv64imafdcv0p7xthead -mcmodel=medany -mabi=lp64d -DPLUGIN -DFM_PLUGIN
 
 ifeq ($(PLTNAME),)
     -include ../Makefile.platform
