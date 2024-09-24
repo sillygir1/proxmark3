@@ -1,12 +1,19 @@
 #include "hf_trace_view.h"
 #include "view_list.h"
 #include "view_manager.h"
+#include "view_manager_dialog.h"
 
 static lv_obj_t *list;
 static uint8_t *trace;
 static uint16_t trace_len;
 static UserData *trace_data;
 static ViewManager *view_manager;
+
+#define OPTS_NUM 2
+static char *dialog_opts[OPTS_NUM] = {"ISO 14443-A", "Mifare Classic"};
+static const char *dialog_icons[OPTS_NUM] = {LV_SYMBOL_LIST, LV_SYMBOL_LIST};
+
+static int trace_draw();
 
 static int trace_download() {
   // We be copying code from private functions
@@ -46,6 +53,20 @@ static int trace_download() {
   return 0;
 }
 
+static void dialog_cb(char *option) {
+  // printf("%s\n", option);
+  if (strcmp(option, "ISO 14443-A") == 0) {
+    set_mode_text("Trace ISO 14443-A");
+    trace_data->data = TYPE_ISO14443A;
+  } else if (strcmp(option, "Mifare Classic") == 0) {
+    set_mode_text("Trace Mifare Classic");
+    trace_data->data = TYPE_MIFARECLASSIC;
+  }
+  view_manager_dialog_exit();
+  lv_obj_clean(list);
+  trace_draw();
+}
+
 static void event_handler(lv_event_t *e) {
   lv_event_code_t code = lv_event_get_code(e);
   lv_obj_t *obj = lv_event_get_target(e);
@@ -55,6 +76,14 @@ static void event_handler(lv_event_t *e) {
     // printf("%s\n", button_text);
     if (strcmp(button_text, "Back") == 0) {
       view_manager_switch_view(view_manager, trace_data->prev_view, NULL);
+    } else if (strcmp(button_text, "Switch protocol") == 0) {
+      ViewManagerDialog *vm_dialog = calloc(1, sizeof(*vm_dialog));
+      vm_dialog->title = "Select protocol";
+      vm_dialog->options = dialog_opts;
+      vm_dialog->options_num = OPTS_NUM;
+      vm_dialog->icons = dialog_icons;
+      vm_dialog->cb = dialog_cb;
+      view_manager_dialog(view_manager, vm_dialog);
     }
   } else if (code == LV_EVENT_KEY &&
              lv_indev_get_key(lv_indev_get_act()) == LV_KEY_ESC) {
@@ -74,6 +103,9 @@ static int trace_draw() {
   memset(line, 0, 512);
   snprintf(line, 32, "Trace length: %u", trace_len);
   btn = lv_list_add_btn(list, LV_SYMBOL_LIST, line);
+  lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
+
+  btn = lv_list_add_btn(list, LV_SYMBOL_LOOP, "Switch protocol");
   lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
 
   while ((trace_pos + TRACELOG_HDR_LEN) < trace_len) {
@@ -99,8 +131,9 @@ static int trace_draw() {
       break;
     }
 
-    if (strlen(explanation) > 0)
+    if (strlen(explanation) > 0) {
       lv_list_add_text(list, explanation);
+    }
     btn = lv_list_add_btn(
         list, hdr->isResponse ? LV_SYMBOL_DOWNLOAD : LV_SYMBOL_UPLOAD, line);
     lv_obj_add_event_cb(btn, event_handler, LV_EVENT_ALL, view_manager);
