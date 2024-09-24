@@ -802,18 +802,17 @@ void RAMFUNC SniffIso14443a(uint8_t param) {
                     LED_C_ON();
 
                     // check - if there is a short 7bit request from reader
-                    if ((!triggered) && (param & 0x02) && (Uart.len == 1) && (Uart.bitCount == 7)) {
-
+                    if ((!triggered) && (param & 0x02) && (Uart.len == 1) && (Uart.bitCount == 7)) triggered = true;
                         triggered = true;
-
-                        if (!LogTrace(receivedCmd,
-                                      Uart.len,
-                                      Uart.startTime * 16 - DELAY_READER_AIR2ARM_AS_SNIFFER,
-                                      Uart.endTime * 16 - DELAY_READER_AIR2ARM_AS_SNIFFER,
-                                      Uart.parity,
-                                      true)) {
-                            break;
-                        }
+                        if (triggered) {
+                            if (!LogTrace(receivedCmd,
+                                        Uart.len,
+                                        Uart.startTime * 16 - DELAY_READER_AIR2ARM_AS_SNIFFER,
+                                        Uart.endTime * 16 - DELAY_READER_AIR2ARM_AS_SNIFFER,
+                                        Uart.parity,
+                                        true)) {
+                                break;
+                            }
                     }
                     // ready to receive another command
                     Uart14aReset();
